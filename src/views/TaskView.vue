@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { useFetch } from '@vueuse/core'
 
 import { Button } from '@/components/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import CurveCard from '@/components/primitives/CurveCard.vue'
 
 import { getTask } from '@/api/getTask'
@@ -28,6 +29,8 @@ onBeforeMount(async () => {
 const handleGenerateSet = async () => {
   console.log('gen')
 }
+
+const isCurveSetExpanded = ref(false)
 </script>
 
 <template>
@@ -40,18 +43,33 @@ const handleGenerateSet = async () => {
       <div
         class="flex flex-col rounded-xl shadow-sm shadow-gray-300 w-full min-h-[60dvh] p-10 bg-white"
       >
-        <div class="flex flex-col w-36 gap-2">
-          <div v-for="curve in response.data.curve_set?.curves">
-            <CurveCard v-bind="curve" />
+        <Collapsible v-model:open="isCurveSetExpanded" v-if="!!response.data.curve_set">
+          <CollapsibleTrigger
+            >Набор "{{ response.data.curve_set?.description }}"</CollapsibleTrigger
+          >
+          <CollapsibleContent>
+            <div class="flex flex-col w-36 gap-2">
+              <div v-for="curve in response.data.curve_set?.curves">
+                <CurveCard v-bind="curve" />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        <div v-else>
+          <div class="flex flex-col gap-3 w-full items-center justify-center h-full">
+            У этой задачи нет набора кривых :(
+            <Button @click="handleGenerateSet">Сгенерировать</Button>
           </div>
         </div>
-        <div class="flex flex-col gap-3 w-full items-center justify-center h-full">
-          У этой задачи нет набора кривых :(
-          <Button @click="handleGenerateSet">Сгенерировать</Button>
+        <div v-if="response.data.analysis_results">Results</div>
+        <div class="text-gray-600 p-5 flex flex-col w-full gap-5 items-center">
+          Анализ ещё не проведён :(
+          <Button>Запустить анализ</Button>
         </div>
       </div>
-      <div class="flex w-full justify-end text-sm text-gray-600"></div>
+
+      <div class="flex w-full justify-end text-sm text-gray-600">Date</div>
     </template>
-    <div v-else>DIC</div>
+    <div></div>
   </div>
 </template>
