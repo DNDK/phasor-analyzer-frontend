@@ -8,6 +8,7 @@ interface Task {
   processing_time?: number
   title: string
   curve_set?: CurveSet
+  created_at: string
 }
 
 export type { Task }
