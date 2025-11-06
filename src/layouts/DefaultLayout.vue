@@ -1,7 +1,9 @@
+<script setup lang="ts">
+import MainHeader from '@/components/primitives/MainHeader.vue'
+</script>
+
 <template>
-  <header class="flex w-full justify-center py-2 bg-amber-300">
-    <h1>Monster</h1>
-  </header>
+  <MainHeader />
   <main class="min-h-dvh p-16">
     <slot />
   </main>

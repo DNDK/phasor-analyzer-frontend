@@ -9,13 +9,7 @@ import { getAllTasks } from '@/api/tasks'
 import type { Task } from '@/types/task'
 
 import StatusGauge from '@/components/primitives/StatusGauge.vue'
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel'
+
 // import type { AnalysisResult } from '@/types/analysis_result'
 // import type { CurveSet } from '@/types/curveSet'
 
@@ -288,7 +282,7 @@ const greeting = computed(() => {
         <div class="grid grid-cols-3 gap-5">
           <RouterLink to="https://google.com" class="group">
             <div
-              class="relative h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white"
+              class="relative h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white font-semibold"
             >
               <h3>Создать новую задачу</h3>
               <p class="text-black/40">Загрузите данные, запустите анализ и получите результат!</p>
@@ -325,7 +319,7 @@ const greeting = computed(() => {
           class="group"
         >
           <div
-            class="w-full relative h-20 backdrop-blur-2xl bg-white/60 rounded-lg p-4 flex gap-5 group-hover:bg-white items-center border-l-8 border-l-green-500"
+            class="w-full relative h-20 backdrop-blur-2xl bg-[#AAEAF2]/70 font-semibold rounded-lg p-4 flex gap-5 group-hover:bg-[#AAEAF2]/70 items-center border-l-8 border-l-green-500"
           >
             <div class="w-full">{{ task.title }}</div>
             <div class="w-full text-gray-400 relative h-full flex items-center">
