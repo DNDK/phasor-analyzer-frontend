@@ -319,7 +319,7 @@ const greeting = computed(() => {
           class="group"
         >
           <div
-            class="w-full relative h-20 backdrop-blur-2xl bg-[#AAEAF2]/70 font-semibold rounded-lg p-4 flex gap-5 group-hover:bg-[#AAEAF2]/70 items-center border-l-8 border-l-green-500"
+            class="w-full relative h-20 backdrop-blur-2xl bg-white/40 font-semibold rounded-lg p-4 flex gap-5 group-hover:bg-white/60 items-center border-l-8 border-l-[#1CA3B5]"
           >
             <div class="w-full">{{ task.title }}</div>
             <div class="w-full text-gray-400 relative h-full flex items-center">
@@ -388,12 +388,12 @@ const greeting = computed(() => {
 
 <style scoped>
 .block-gradient {
-  background: #f2ecdf;
+  background: #7acfbf;
   background: linear-gradient(
-    45deg,
-    rgba(242, 236, 223, 1) 0%,
-    rgba(255, 250, 158, 1) 72%,
-    rgba(255, 240, 184, 1) 100%
+    90deg,
+    rgba(122, 207, 191, 1) 0%,
+    rgba(189, 234, 255, 1) 46%,
+    rgba(135, 235, 255, 1) 100%
   );
 }
 </style>
