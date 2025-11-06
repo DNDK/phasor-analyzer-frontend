@@ -3,6 +3,7 @@ import CreatePlot from '@/views/CreatePlot.vue'
 import DefaultView from '@/views/DefaultView.vue'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import TaskView from '@/views/TaskView.vue'
+import CreateTask from '@/views/CreateTask.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,6 +20,12 @@ const router = createRouter({
       component: TaskView,
       meta: { layout: DefaultLayout },
     },
+    {
+      path: '/create-task',
+      name: 'create-task-view',
+      component: CreateTask,
+      meta: {layout: DefaultLayout}
+    }
     // {
     //   path: '/',
     //   name: 'home',

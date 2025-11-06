@@ -280,7 +280,7 @@ const greeting = computed(() => {
       <div class="space-y-10">
         <div class="text-2xl">С чего начнём?</div>
         <div class="grid grid-cols-3 gap-5">
-          <RouterLink to="https://google.com" class="group">
+          <RouterLink to="/create-task" class="group">
             <div
               class="relative h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white font-semibold"
             >
