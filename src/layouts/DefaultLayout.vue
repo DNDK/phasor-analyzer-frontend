@@ -5,5 +5,5 @@
   <main class="min-h-dvh p-16">
     <slot />
   </main>
-  <footer>made by DNDK</footer>
+  <footer class="h-40 bg-yellow-300">made by</footer>
 </template>

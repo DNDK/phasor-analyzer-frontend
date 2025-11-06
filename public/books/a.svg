@@ -1,0 +1,11 @@
+<svg width="200" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="300" fill="#0b3d91"/>
+  <polyline points="10,250 40,200 80,230 120,150 160,170 190,120"
+            fill="none" stroke="#ffffff" stroke-width="3"/>
+  <text x="50%" y="40%" fill="#ffffff" font-family="sans-serif" font-size="18" text-anchor="middle">
+    Signal Processing
+  </text>
+  <text x="50%" y="55%" fill="#bbdefb" font-family="sans-serif" font-size="14" text-anchor="middle">
+    Essentials
+  </text>
+</svg>
