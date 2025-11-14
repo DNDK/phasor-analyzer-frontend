@@ -19,7 +19,7 @@ const stage = ref<'upload' | 'preview' | 'result'>()
 
 <template>
   <div class="h-full">
-    <div class="w-2/3 mx-auto">
+    <div class="w-3/4 mx-auto">
       <h1 class="text-3xl font-bold mb-8 leading-8">Новая задача</h1>
       <div class="border rounded-lg relative overflow-hidden space-y-15 p-14 card-background">
         <div class="absolute -top-30 -left-30 opacity-10 size-300 rotate-50">

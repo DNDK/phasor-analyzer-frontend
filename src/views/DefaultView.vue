@@ -269,10 +269,8 @@ const greeting = computed(() => {
 </script>
 
 <template>
-  <div class="size-full grid grid-cols-3 gap-10 px-40">
-    <div
-      class="col-span-2 block-gradient p-8 space-y-20 relative rounded-lg border-yellow-400/20 border overflow-hidden"
-    >
+  <div class="size-full grid grid-cols-3 gap-10">
+    <div class="col-span-2 block-gradient p-8 space-y-20 relative rounded-lg overflow-hidden">
       <div class="absolute top-0 -right-30 h-100 -rotate-15 opacity-20">
         <img src="/Fluorescein.svg" class="object-fit size-full" />
       </div>
@@ -282,9 +280,9 @@ const greeting = computed(() => {
         <div class="grid grid-cols-3 gap-5">
           <RouterLink to="/create-task" class="group">
             <div
-              class="relative h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white font-semibold"
+              class="relative min-h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white"
             >
-              <h3>Создать новую задачу</h3>
+              <h3 class="font-semibold">Создать новую задачу</h3>
               <p class="text-black/40">Загрузите данные, запустите анализ и получите результат!</p>
               <div class="text-gray-400 relative">
                 <ArrowRightIcon
@@ -307,9 +305,7 @@ const greeting = computed(() => {
       </div>
     </div>
 
-    <div
-      class="block-gradient p-8 space-y-20 relative rounded-lg border-yellow-400/20 border overflow-hidden row-span-2"
-    >
+    <div class="block-gradient p-8 space-y-20 relative rounded-lg overflow-hidden row-span-2">
       <h2 class="text-4xl font-bold">Недавние задачи</h2>
       <div class="flex flex-col gap-4">
         <RouterLink
@@ -332,12 +328,8 @@ const greeting = computed(() => {
       </div>
     </div>
 
-    <div
-      class="block-gradient p-8 relative rounded-lg border-yellow-400/20 border overflow-hidden space-y-10"
-    ></div>
-    <div
-      class="block-gradient p-8 space-y-20 relative rounded-lg border-yellow-400/20 border overflow-hidden"
-    >
+    <div class="block-gradient p-8 relative rounded-lg overflow-hidden space-y-10"></div>
+    <div class="block-gradient p-8 space-y-20 relative rounded-lg overflow-hidden">
       <h2 class="text-4xl font-bold">Состояние сервера</h2>
       <div class="flex gap-4 justify-between w-full px-10">
         <div class="flex flex-col justify-center">
@@ -388,12 +380,12 @@ const greeting = computed(() => {
 
 <style scoped>
 .block-gradient {
-  background: #7acfbf;
+  background: #83a4d4; /* fallback for old browsers */
+  background: -webkit-linear-gradient(180deg, #b6fbff, #83a4d4); /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(
-    90deg,
-    rgba(122, 207, 191, 1) 0%,
-    rgba(189, 234, 255, 1) 46%,
-    rgba(135, 235, 255, 1) 100%
-  );
+    98deg,
+    #b6fbff,
+    #83a4d4
+  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 </style>

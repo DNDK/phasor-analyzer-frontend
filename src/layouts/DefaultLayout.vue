@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FooterBlock from '@/components/FooterBlock.vue'
 import MainHeader from '@/components/primitives/MainHeader.vue'
 </script>
 
@@ -8,7 +9,7 @@ import MainHeader from '@/components/primitives/MainHeader.vue'
     <div class="h-200 sparkle fixed top-0 left-0 blur-3xl -z-10" />
     <slot />
   </main>
-  <footer class="h-40 bg-yellow-300">made by</footer>
+  <FooterBlock />
 </template>
 
 <style scoped>
