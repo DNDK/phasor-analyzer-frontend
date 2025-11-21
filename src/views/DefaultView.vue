@@ -13,231 +13,232 @@ import StatusGauge from '@/components/primitives/StatusGauge.vue'
 // import type { AnalysisResult } from '@/types/analysis_result'
 // import type { CurveSet } from '@/types/curveSet'
 
-// const router = useRouter()
+const router = useRouter()
 
-// onBeforeMount(async () => {
-//   response.value = await getAllTasks()
-// })
+const tasks = ref<Task[] | null>(null)
 
-// const response = ref<Awaited<ReturnType<typeof getAllTasks>> | null>(null)
+onBeforeMount(async () => {
+  const response = await getAllTasks()
+  tasks.value = response.data.value
+})
 
-const mockTasksWithResults: Task[] = [
-  {
-    id: 1,
-    title: 'Baseline scan',
-    created_at: '2025-11-06T08:15:00.000Z',
-    processing_time: 127,
-    // curve_set: {
-    //   id: 3001,
-    //   task_id: 1,
-    //   description: 'Baseline curves (reference)',
-    //   curves: [
-    //     {
-    //       id: 'c1',
-    //       time_axis: [0, 1, 2, 3, 4, 5],
-    //       raw: [0.01, 0.05, 0.11, 0.18, 0.26, 0.31],
-    //       raw_scaled: [0.01, 0.05, 0.11, 0.18, 0.26, 0.31],
-    //     },
-    //     {
-    //       id: 'c2',
-    //       time_axis: [0, 1, 2, 3, 4, 5],
-    //       raw: [0.0, 0.04, 0.09, 0.15, 0.22, 0.28],
-    //       convolved: [0.0, 0.03, 0.08, 0.13, 0.19, 0.24],
-    //     },
-    //   ],
-    // },
-    analysis_results: {
-      id: 7001,
-      curve_set_id: 3001,
-      dw_real: [0.12, 0.18, 0.26, 0.31],
-      dw_imag: [-0.05, -0.09, -0.13, -0.16],
-      coeff_v: 1.23,
-      coeff_u: 0.87,
-      tau1: 2.6,
-      tau2: 11.4,
-      a1_coeffs: [0.62, -0.14, 0.03],
-      a2_coeffs: [0.48, 0.07, -0.01],
-      omega: 6.283185307179586, // 2π*1
-    },
-  },
-  {
-    id: 2,
-    title: 'Kinetics – sample A',
-    created_at: '2025-11-06T08:45:12.000Z',
-    processing_time: 312,
-    // curve_set: {
-    //   id: 3001, // тот же сет, что использовали в анализе
-    //   task_id: 2,
-    //   description: 'Kinetics curves (sample A)',
-    //   curves: [
-    //     {
-    //       id: 'k1',
-    //       time_axis: [0, 10, 20, 30, 40, 50, 60],
-    //       noisy: [0.0, 0.07, 0.15, 0.22, 0.27, 0.31, 0.32],
-    //       raw: [0.0, 0.06, 0.14, 0.21, 0.26, 0.3, 0.32],
-    //     },
-    //     {
-    //       id: 'k2',
-    //       time_axis: [0, 10, 20, 30, 40, 50, 60],
-    //       raw_scaled: [0.01, 0.05, 0.1, 0.16, 0.21, 0.25, 0.28],
-    //     },
-    //   ],
-    // },
-    analysis_results: {
-      id: 7002,
-      curve_set_id: 3001,
-      dw_real: [0.1, 0.15, 0.21, 0.27, 0.32],
-      dw_imag: [-0.04, -0.08, -0.11, -0.15, -0.17],
-      coeff_v: 1.11,
-      coeff_u: 0.95,
-      tau1: 3.1,
-      tau2: 10.2,
-      a1_coeffs: [0.55, -0.1, 0.02],
-      a2_coeffs: [0.52, 0.05, -0.02],
-      omega: 3.141592653589793, // π
-    },
-  },
-  {
-    id: 3,
-    title: 'Selected wavelengths',
-    created_at: '2025-11-06T09:02:30.000Z',
-    processing_time: 165,
-    // curve_set: {
-    //   id: 3002,
-    //   task_id: 3,
-    //   description: 'Discrete wavelengths set',
-    //   curves: [
-    //     {
-    //       id: 'λ450',
-    //       time_axis: [0, 1, 2, 3],
-    //       raw: [0.02, 0.08, 0.15, 0.22],
-    //     },
-    //     {
-    //       id: 'λ520',
-    //       time_axis: [0, 1, 2, 3],
-    //       raw: [0.01, 0.07, 0.13, 0.19],
-    //     },
-    //   ],
-    // },
-    analysis_results: {
-      id: 7003,
-      curve_set_id: 3002,
-      dw_real: [0.05, 0.09, 0.16, 0.22],
-      dw_imag: [-0.02, -0.05, -0.09, -0.12],
-      coeff_v: 1.34,
-      coeff_u: 0.81,
-      tau1: 1.9,
-      tau2: 8.7,
-      a1_coeffs: [0.6, -0.12, 0.01],
-      a2_coeffs: [0.44, 0.09, -0.01],
-      omega: 12.566370614359172, // 2π*2
-    },
-  },
-  {
-    id: 4,
-    title: 'Reference – dark current',
-    created_at: '2025-11-06T09:20:00.000Z',
-    processing_time: 74,
-    // curve_set: {
-    //   id: 3003,
-    //   task_id: 4,
-    //   description: 'Dark current reference curves',
-    //   curves: [
-    //     {
-    //       id: 'd1',
-    //       time_axis: [0, 1, 2, 3, 4, 5],
-    //       raw: [0.0, 0.01, 0.01, 0.02, 0.02, 0.03],
-    //       convolved: [0.0, 0.01, 0.01, 0.02, 0.02, 0.02],
-    //     },
-    //   ],
-    // },
-    analysis_results: {
-      id: 7004,
-      curve_set_id: 3003,
-      dw_real: [0.14, 0.21, 0.29, 0.35, 0.39, 0.42],
-      dw_imag: [-0.06, -0.1, -0.14, -0.17, -0.19, -0.2],
-      coeff_v: 1.05,
-      coeff_u: 1.02,
-      tau1: 4.2,
-      tau2: 14.8,
-      a1_coeffs: [0.7, -0.15, 0.04],
-      a2_coeffs: [0.39, 0.11, -0.02],
-      omega: 5.026548245743669, // 2π*0.8
-    },
-  },
-  {
-    id: 5,
-    title: 'Spectrum – sample B',
-    created_at: '2025-11-06T09:48:44.000Z',
-    processing_time: 198,
-    // curve_set: {
-    //   id: 3004,
-    //   task_id: 5,
-    //   description: 'Full spectrum sweep (sample B)',
-    //   curves: [
-    //     {
-    //       id: 111,
-    //       time_axis: [400, 500, 600, 700],
-    //       raw: [0.05, 0.18, 0.27, 0.3],
-    //     },
-    //     {
-    //       id: 2222,
-    //       time_axis: [400, 500, 600, 700],
-    //       raw_scaled: [0.95, 0.82, 0.73, 0.7],
-    //     },
-    //   ],
-    // },
-    analysis_results: {
-      id: 7005,
-      curve_set_id: 3004,
-      dw_real: [0.08, 0.13, 0.2, 0.26, 0.3],
-      dw_imag: [-0.03, -0.07, -0.1, -0.13, -0.15],
-      coeff_v: 1.18,
-      coeff_u: 0.9,
-      tau1: 2.2,
-      tau2: 9.9,
-      a1_coeffs: [0.58, -0.11, 0.02],
-      a2_coeffs: [0.47, 0.06, -0.01],
-      omega: 9.42477796076938, // 2π*1.5
-    },
-  },
-  {
-    id: 6,
-    title: 'Calibration – 5 points',
-    created_at: '2025-11-06T10:05:10.000Z',
-    processing_time: 94,
-    // curve_set: {
-    //   id: 3005,
-    //   task_id: 6,
-    //   description: 'Five-point calibration series',
-    //   curves: [
-    //     {
-    //       id: 'calA',
-    //       time_axis: [0, 1, 2, 3],
-    //       raw: [0.02, 0.08, 0.18, 0.3],
-    //     },
-    //     {
-    //       id: 'calB',
-    //       time_axis: [0, 1, 2, 3],
-    //       raw: [0.01, 0.07, 0.16, 0.28],
-    //     },
-    //   ],
-    // },
-    analysis_results: {
-      id: 7006,
-      curve_set_id: 3005,
-      dw_real: [0.11, 0.17, 0.24, 0.3],
-      dw_imag: [-0.05, -0.09, -0.12, -0.16],
-      coeff_v: 1.2,
-      coeff_u: 0.92,
-      tau1: 2.8,
-      tau2: 12.1,
-      a1_coeffs: [0.63, -0.13, 0.03],
-      a2_coeffs: [0.46, 0.08, -0.02],
-      omega: 7.539822368615503, // 2π*1.2
-    },
-  },
-]
+// const mockTasksWithResults: Task[] = [
+//   {
+//     id: 1,
+//     title: 'Baseline scan',
+//     created_at: '2025-11-06T08:15:00.000Z',
+//     processing_time: 127,
+//     // curve_set: {
+//     //   id: 3001,
+//     //   task_id: 1,
+//     //   description: 'Baseline curves (reference)',
+//     //   curves: [
+//     //     {
+//     //       id: 'c1',
+//     //       time_axis: [0, 1, 2, 3, 4, 5],
+//     //       raw: [0.01, 0.05, 0.11, 0.18, 0.26, 0.31],
+//     //       raw_scaled: [0.01, 0.05, 0.11, 0.18, 0.26, 0.31],
+//     //     },
+//     //     {
+//     //       id: 'c2',
+//     //       time_axis: [0, 1, 2, 3, 4, 5],
+//     //       raw: [0.0, 0.04, 0.09, 0.15, 0.22, 0.28],
+//     //       convolved: [0.0, 0.03, 0.08, 0.13, 0.19, 0.24],
+//     //     },
+//     //   ],
+//     // },
+//     analysis_results: {
+//       id: 7001,
+//       curve_set_id: 3001,
+//       dw_real: [0.12, 0.18, 0.26, 0.31],
+//       dw_imag: [-0.05, -0.09, -0.13, -0.16],
+//       coeff_v: 1.23,
+//       coeff_u: 0.87,
+//       tau1: 2.6,
+//       tau2: 11.4,
+//       a1_coeffs: [0.62, -0.14, 0.03],
+//       a2_coeffs: [0.48, 0.07, -0.01],
+//       omega: 6.283185307179586, // 2π*1
+//     },
+//   },
+//   {
+//     id: 2,
+//     title: 'Kinetics – sample A',
+//     created_at: '2025-11-06T08:45:12.000Z',
+//     processing_time: 312,
+//     // curve_set: {
+//     //   id: 3001, // тот же сет, что использовали в анализе
+//     //   task_id: 2,
+//     //   description: 'Kinetics curves (sample A)',
+//     //   curves: [
+//     //     {
+//     //       id: 'k1',
+//     //       time_axis: [0, 10, 20, 30, 40, 50, 60],
+//     //       noisy: [0.0, 0.07, 0.15, 0.22, 0.27, 0.31, 0.32],
+//     //       raw: [0.0, 0.06, 0.14, 0.21, 0.26, 0.3, 0.32],
+//     //     },
+//     //     {
+//     //       id: 'k2',
+//     //       time_axis: [0, 10, 20, 30, 40, 50, 60],
+//     //       raw_scaled: [0.01, 0.05, 0.1, 0.16, 0.21, 0.25, 0.28],
+//     //     },
+//     //   ],
+//     // },
+//     analysis_results: {
+//       id: 7002,
+//       curve_set_id: 3001,
+//       dw_real: [0.1, 0.15, 0.21, 0.27, 0.32],
+//       dw_imag: [-0.04, -0.08, -0.11, -0.15, -0.17],
+//       coeff_v: 1.11,
+//       coeff_u: 0.95,
+//       tau1: 3.1,
+//       tau2: 10.2,
+//       a1_coeffs: [0.55, -0.1, 0.02],
+//       a2_coeffs: [0.52, 0.05, -0.02],
+//       omega: 3.141592653589793, // π
+//     },
+//   },
+//   {
+//     id: 3,
+//     title: 'Selected wavelengths',
+//     created_at: '2025-11-06T09:02:30.000Z',
+//     processing_time: 165,
+//     // curve_set: {
+//     //   id: 3002,
+//     //   task_id: 3,
+//     //   description: 'Discrete wavelengths set',
+//     //   curves: [
+//     //     {
+//     //       id: 'λ450',
+//     //       time_axis: [0, 1, 2, 3],
+//     //       raw: [0.02, 0.08, 0.15, 0.22],
+//     //     },
+//     //     {
+//     //       id: 'λ520',
+//     //       time_axis: [0, 1, 2, 3],
+//     //       raw: [0.01, 0.07, 0.13, 0.19],
+//     //     },
+//     //   ],
+//     // },
+//     analysis_results: {
+//       id: 7003,
+//       curve_set_id: 3002,
+//       dw_real: [0.05, 0.09, 0.16, 0.22],
+//       dw_imag: [-0.02, -0.05, -0.09, -0.12],
+//       coeff_v: 1.34,
+//       coeff_u: 0.81,
+//       tau1: 1.9,
+//       tau2: 8.7,
+//       a1_coeffs: [0.6, -0.12, 0.01],
+//       a2_coeffs: [0.44, 0.09, -0.01],
+//       omega: 12.566370614359172, // 2π*2
+//     },
+//   },
+//   {
+//     id: 4,
+//     title: 'Reference – dark current',
+//     created_at: '2025-11-06T09:20:00.000Z',
+//     processing_time: 74,
+//     // curve_set: {
+//     //   id: 3003,
+//     //   task_id: 4,
+//     //   description: 'Dark current reference curves',
+//     //   curves: [
+//     //     {
+//     //       id: 'd1',
+//     //       time_axis: [0, 1, 2, 3, 4, 5],
+//     //       raw: [0.0, 0.01, 0.01, 0.02, 0.02, 0.03],
+//     //       convolved: [0.0, 0.01, 0.01, 0.02, 0.02, 0.02],
+//     //     },
+//     //   ],
+//     // },
+//     analysis_results: {
+//       id: 7004,
+//       curve_set_id: 3003,
+//       dw_real: [0.14, 0.21, 0.29, 0.35, 0.39, 0.42],
+//       dw_imag: [-0.06, -0.1, -0.14, -0.17, -0.19, -0.2],
+//       coeff_v: 1.05,
+//       coeff_u: 1.02,
+//       tau1: 4.2,
+//       tau2: 14.8,
+//       a1_coeffs: [0.7, -0.15, 0.04],
+//       a2_coeffs: [0.39, 0.11, -0.02],
+//       omega: 5.026548245743669, // 2π*0.8
+//     },
+//   },
+//   {
+//     id: 5,
+//     title: 'Spectrum – sample B',
+//     created_at: '2025-11-06T09:48:44.000Z',
+//     processing_time: 198,
+//     // curve_set: {
+//     //   id: 3004,
+//     //   task_id: 5,
+//     //   description: 'Full spectrum sweep (sample B)',
+//     //   curves: [
+//     //     {
+//     //       id: 111,
+//     //       time_axis: [400, 500, 600, 700],
+//     //       raw: [0.05, 0.18, 0.27, 0.3],
+//     //     },
+//     //     {
+//     //       id: 2222,
+//     //       time_axis: [400, 500, 600, 700],
+//     //       raw_scaled: [0.95, 0.82, 0.73, 0.7],
+//     //     },
+//     //   ],
+//     // },
+//     analysis_results: {
+//       id: 7005,
+//       curve_set_id: 3004,
+//       dw_real: [0.08, 0.13, 0.2, 0.26, 0.3],
+//       dw_imag: [-0.03, -0.07, -0.1, -0.13, -0.15],
+//       coeff_v: 1.18,
+//       coeff_u: 0.9,
+//       tau1: 2.2,
+//       tau2: 9.9,
+//       a1_coeffs: [0.58, -0.11, 0.02],
+//       a2_coeffs: [0.47, 0.06, -0.01],
+//       omega: 9.42477796076938, // 2π*1.5
+//     },
+//   },
+//   {
+//     id: 6,
+//     title: 'Calibration – 5 points',
+//     created_at: '2025-11-06T10:05:10.000Z',
+//     processing_time: 94,
+//     // curve_set: {
+//     //   id: 3005,
+//     //   task_id: 6,
+//     //   description: 'Five-point calibration series',
+//     //   curves: [
+//     //     {
+//     //       id: 'calA',
+//     //       time_axis: [0, 1, 2, 3],
+//     //       raw: [0.02, 0.08, 0.18, 0.3],
+//     //     },
+//     //     {
+//     //       id: 'calB',
+//     //       time_axis: [0, 1, 2, 3],
+//     //       raw: [0.01, 0.07, 0.16, 0.28],
+//     //     },
+//     //   ],
+//     // },
+//     analysis_results: {
+//       id: 7006,
+//       curve_set_id: 3005,
+//       dw_real: [0.11, 0.17, 0.24, 0.3],
+//       dw_imag: [-0.05, -0.09, -0.12, -0.16],
+//       coeff_v: 1.2,
+//       coeff_u: 0.92,
+//       tau1: 2.8,
+//       tau2: 12.1,
+//       a1_coeffs: [0.63, -0.13, 0.03],
+//       a2_coeffs: [0.46, 0.08, -0.02],
+//       omega: 7.539822368615503, // 2π*1.2
+//     },
+//   },
+// ]
 
 // const handleCreateTask = async () => {
 //   try {
@@ -310,7 +311,7 @@ const greeting = computed(() => {
       <div class="flex flex-col gap-4">
         <RouterLink
           to="https://google.com"
-          v-for="task in mockTasksWithResults.slice(0, 6)"
+          v-for="task in tasks?.slice(0, 6) || []"
           :key="task.id"
           class="group"
         >
