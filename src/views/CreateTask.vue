@@ -13,14 +13,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import type { Task } from '@/types/task'
+import FileInput from '@/components/primitives/FileInput.vue'
 
 const stage = ref<'upload' | 'preview' | 'result'>()
+
+const props = defineProps<{
+  mode: 'view' | 'create'
+  task?: Task
+}>()
 </script>
 
 <template>
   <div class="h-full">
     <div class="w-3/4 mx-auto">
-      <h1 class="text-3xl font-bold mb-8 leading-8">Новая задача</h1>
+      <h1 class="text-3xl font-bold mb-8 leading-8">
+        {{ props.mode === 'view' ? props.task?.title : 'Новая задача' }}
+      </h1>
       <div class="border rounded-lg relative overflow-hidden space-y-15 p-14 card-background">
         <div class="absolute -top-30 -left-30 opacity-10 size-300 rotate-50">
           <img src="/hexagons.svg" class="size-full" />
@@ -50,7 +59,8 @@ const stage = ref<'upload' | 'preview' | 'result'>()
               после импульса возбуждения (кривая затухания), которая была получена в ходе измерений.
             </p>
           </div>
-          <div
+          <FileInput />
+          <!-- <div
             class="bg-white/20 border-white/50 border h-full col-span-2 rounded-lg flex flex-col gap-10 items-center justify-center text-gray-400 backdrop-blur-3xl"
           >
             <ArrowUpTrayIcon class="size-10" />
@@ -58,7 +68,7 @@ const stage = ref<'upload' | 'preview' | 'result'>()
               <span class="text-sky-600 font-semibold">Выберите </span>набор данных или
               <span class="text-sky-600 font-semibold">перетащите</span> его сюда
             </div>
-          </div>
+          </div> -->
 
           <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl my-auto">
             <h3 class="font-semibold leading-10 text-lg">Визуализация исходных данных</h3>
