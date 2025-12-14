@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { TUploadedData } from './types/uploadedData'
 
-type TUploadedData = {
-  time: number[]
-  intensity: number[]
-}
+const modelValue = defineModel<TUploadedData>()
 
 // const modelValue = defineModel()
 const fileInput = ref<HTMLInputElement>()
-const uploadedData = ref<TUploadedData>({ time: [], intensity: [] })
+const uploadedData = ref<TUploadedData | null>({ time: [], intensity: [] })
 
 const fileName = ref<string>('')
 
@@ -32,15 +30,21 @@ const readByCols = (text: string) => {
       throw new Error('Each line must contain exactly two columns of data.')
     }
     try {
-      uploadedData.value.time.push(parseFloat(parts[0]))
-      uploadedData.value.intensity.push(parseFloat(parts[1]))
+      uploadedData.value?.time.push(parseFloat(parts[0]))
+      uploadedData.value?.intensity.push(parseFloat(parts[1]))
     } catch {
       throw new Error('Data must be numerical.')
     }
   }
 }
 
+const resetData = () => {
+  uploadedData.value = { time: [], intensity: [] }
+}
+
 const readFile = (file: File) => {
+  resetData()
+
   const fileReader = new FileReader()
   fileReader.onload = () => {
     const data = fileReader.result?.toString() || ''
@@ -108,6 +112,14 @@ const handleGlobalDrop = (event: DragEvent) => {
   dragDepth.value = 0
   isDragging.value = false
 }
+
+watch(
+  uploadedData,
+  (newValue) => {
+    modelValue.value = newValue! || null
+  },
+  { deep: true },
+)
 
 onMounted(() => {
   window.addEventListener('dragenter', handleDragEnter)

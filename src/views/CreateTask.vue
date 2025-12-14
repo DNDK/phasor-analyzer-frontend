@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PaperClipIcon, ArrowUpTrayIcon, ArrowRightIcon } from '@heroicons/vue/24/outline'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import MockChart from '@/components/primitives/MockChart.vue'
 import MockChartClean from '@/components/primitives/MockChartClean.vue'
@@ -14,7 +14,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { Task } from '@/types/task'
+import type { TUploadedData } from '@/components/primitives/types/uploadedData'
 import FileInput from '@/components/primitives/FileInput.vue'
+import { createTask } from '@/api/tasks'
+import { uploadCurveSetFromData } from '@/api/curves'
+import { startAnalysis } from '@/api/analysis'
+import type { AnalysisResult } from '@/types/analysis_result'
 
 const stage = ref<'upload' | 'preview' | 'result'>()
 
@@ -22,6 +27,74 @@ const props = defineProps<{
   mode: 'view' | 'create'
   task?: Task
 }>()
+
+const dataInput = ref<TUploadedData>({ time: [], intensity: [] })
+
+const analysisResult = ref<AnalysisResult | null>(null)
+const taskId = ref<number | null>(null)
+const isSubmitting = ref(false)
+const submitError = ref<string | null>(null)
+
+const hasInputData = computed(
+  () => (dataInput.value.time?.length ?? 0) > 0 && (dataInput.value.intensity?.length ?? 0) > 0,
+)
+
+const aCoeffs = computed(() => {
+  if (!analysisResult.value) return []
+  return analysisResult.value.a1_coeffs.map((a1, idx) => ({
+    index: idx + 1,
+    a1,
+    a2: analysisResult.value?.a2_coeffs?.[idx],
+  }))
+})
+
+const runFullAnalysis = async () => {
+  submitError.value = null
+  analysisResult.value = null
+
+  if (!hasInputData.value) {
+    submitError.value = 'Сначала загрузите файл с данными'
+    return
+  }
+
+  isSubmitting.value = true
+  try {
+    const taskResponse = await createTask()
+    if (taskResponse.error.value) {
+      throw new Error('Не удалось создать задачу')
+    }
+    const createdTask = taskResponse.data.value
+    if (!createdTask?.id) {
+      throw new Error('Задача создана, но id не получен')
+    }
+    taskId.value = createdTask.id
+
+    const uploadPayload = {
+      task_id: createdTask.id,
+      description: 'User uploaded dataset',
+      curves: [
+        {
+          time_axis: dataInput.value.time,
+          intensity: dataInput.value.intensity,
+        },
+      ],
+    }
+    const uploadResponse = await uploadCurveSetFromData(uploadPayload)
+    if (uploadResponse.error.value) {
+      throw new Error('Не удалось загрузить данные на сервер')
+    }
+
+    const analysisResponse = await startAnalysis(createdTask.id)
+    if (analysisResponse.error.value) {
+      throw new Error('Не удалось запустить анализ')
+    }
+    analysisResult.value = analysisResponse.data.value || null
+  } catch (e: any) {
+    submitError.value = e?.message || 'Неизвестная ошибка'
+  } finally {
+    isSubmitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -59,7 +132,7 @@ const props = defineProps<{
               после импульса возбуждения (кривая затухания), которая была получена в ходе измерений.
             </p>
           </div>
-          <FileInput />
+          <FileInput v-model="dataInput" />
           <!-- <div
             class="bg-white/20 border-white/50 border h-full col-span-2 rounded-lg flex flex-col gap-10 items-center justify-center text-gray-400 backdrop-blur-3xl"
           >
@@ -80,7 +153,7 @@ const props = defineProps<{
           <div
             class="bg-white/20 border-white/50 border w-full col-span-2 rounded-lg gap-10 items-center justify-center text-gray-400 p-5 py-auto h-96 relative backdrop-blur-3xl"
           >
-            <MockChart />
+            <MockChart :data="dataInput || null" />
           </div>
           <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl my-auto">
             <h3 class="font-semibold leading-10 text-lg">Данные после обработки</h3>
@@ -105,7 +178,7 @@ const props = defineProps<{
           <div
             class="bg-white/20 border-white/50 border w-full col-span-2 rounded-lg gap-10 items-center justify-center text-gray-400 p-5 py-auto h-96 relative backdrop-blur-3xl"
           >
-            <MockChart />
+            <MockChart :data="dataInput" />
           </div>
           <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl my-auto">
             <h3 class="font-semibold leading-10 text-lg">Результаты анализа</h3>
@@ -118,62 +191,70 @@ const props = defineProps<{
           <div
             class="bg-white/20 border-white/50 border w-full col-span-2 rounded-lg gap-10 items-center justify-center p-8 py-auto relative space-y-4 backdrop-blur-3xl"
           >
-            <div class="font-semibold">
-              По результатам анализа кривых затухания методом фазовых векторов были получены
-              следующие значения:
+            <div class="font-semibold flex items-center gap-2">
+              <span>
+                По результатам анализа кривых затухания методом фазовых векторов были получены
+                следующие значения
+              </span>
+              <span v-if="taskId" class="text-xs text-gray-600">(task #{{ taskId }})</span>
             </div>
-            <div>
-              <span>Предэкспоненциальные коэффициенты</span>
-              <Table>
-                <TableCaption>Коэффициенты a1, a2 для набора</TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead> № </TableHead>
-                    <TableHead> a1 </TableHead>
-                    <TableHead> a2</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell class="font-medium"> 1 </TableCell>
-                    <TableCell>0.9</TableCell>
-                    <TableCell>0.1</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell class="font-medium"> 2 </TableCell>
-                    <TableCell>0.8</TableCell>
-                    <TableCell>0.2</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell class="font-medium"> 3 </TableCell>
-                    <TableCell>0.7</TableCell>
-                    <TableCell>0.3</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+            <div v-if="submitError" class="text-red-600 text-sm">{{ submitError }}</div>
+            <div v-if="!analysisResult" class="text-sm text-gray-600">
+              Загрузите данные и нажмите «Запустить анализ», чтобы увидеть результаты.
             </div>
-            <div>
-              <span>Времена жизни</span>
-              <Table>
-                <TableCaption>Времена жизни TAU1, TAU2 для набора</TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead> TAU1 </TableHead>
-                    <TableHead> TAU2</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>3</TableCell>
-                    <TableCell>1</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+            <div v-else class="space-y-4 w-full">
+              <div>
+                <span>Предэкспоненциальные коэффициенты</span>
+                <Table>
+                  <TableCaption>Коэффициенты a1, a2 для набора</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead> № </TableHead>
+                      <TableHead> a1 </TableHead>
+                      <TableHead> a2</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow v-for="row in aCoeffs" :key="row.index">
+                      <TableCell class="font-medium"> {{ row.index }} </TableCell>
+                      <TableCell>{{ row.a1?.toFixed(4) }}</TableCell>
+                      <TableCell>{{ row.a2?.toFixed(4) }}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              <div>
+                <span>Времена жизни</span>
+                <Table>
+                  <TableCaption>Времена жизни TAU1, TAU2 для набора</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead> TAU1 </TableHead>
+                      <TableHead> TAU2</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>{{ analysisResult?.tau1?.toFixed(4) }}</TableCell>
+                      <TableCell>{{ analysisResult?.tau2?.toFixed(4) }}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="mt-8 flex w-full justify-end">
+      <div class="mt-8 flex w-full justify-end gap-4">
+        <button
+          class="px-6 py-2 rounded-lg border flex gap-4 hover:cursor-pointer bg-linear-30 from-sky-200/50 to-sky-200 disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="isSubmitting || !hasInputData"
+          @click="runFullAnalysis"
+        >
+          <ArrowUpTrayIcon class="size-6 text-black/60" />
+          {{ isSubmitting ? 'Запускаем...' : 'Запустить анализ' }}
+          <ArrowRightIcon class="size-6 text-black/40" />
+        </button>
         <button
           class="px-6 py-2 rounded-lg border flex gap-4 hover:cursor-pointer bg-linear-30 from-sky-200/50 to-sky-200"
         >

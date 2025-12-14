@@ -11,3 +11,8 @@ export async function getAllTasks() {
   const { data, error, isFetching } = await useFetch<Task[]>(`/api/tasks/`).json<Task[]>()
   return { data, error, isFetching }
 }
+
+export async function createTask() {
+  const { data, error, isFetching } = await useFetch<Task>(`/api/tasks/create`).post().json<Task>()
+  return { data, error, isFetching }
+}

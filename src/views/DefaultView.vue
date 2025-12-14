@@ -292,16 +292,32 @@ const greeting = computed(() => {
               </div>
             </div>
           </RouterLink>
-          <RouterLink to="https://google.com">
-            <div class="h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4">
-              <h3>Создать новую задачу</h3>
+          <RouterLink to="/create-task" class="group">
+            <div
+              class="relative min-h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white"
+            >
+              <h3 class="font-semibold">Создать новую задачу</h3>
+              <p class="text-black/40">Загрузите данные, запустите анализ и получите результат!</p>
+              <div class="text-gray-400 relative">
+                <ArrowRightIcon
+                  class="size-6 absolute group-hover:right-0 right-1/4 duration-200 opacity-0 group-hover:opacity-100"
+                />
+              </div>
             </div>
           </RouterLink>
-          <RouterLink to="https://google.com"
-            ><div class="h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4">
-              <h3>Создать новую задачу</h3>
-            </div></RouterLink
-          >
+          <RouterLink to="/create-task" class="group">
+            <div
+              class="relative min-h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white"
+            >
+              <h3 class="font-semibold">Создать новую задачу</h3>
+              <p class="text-black/40">Загрузите данные, запустите анализ и получите результат!</p>
+              <div class="text-gray-400 relative">
+                <ArrowRightIcon
+                  class="size-6 absolute group-hover:right-0 right-1/4 duration-200 opacity-0 group-hover:opacity-100"
+                />
+              </div>
+            </div>
+          </RouterLink>
         </div>
       </div>
     </div>
@@ -331,7 +347,7 @@ const greeting = computed(() => {
 
     <div class="block-gradient p-8 relative rounded-lg overflow-hidden space-y-10"></div>
     <div class="block-gradient p-8 space-y-20 relative rounded-lg overflow-hidden">
-      <h2 class="text-4xl font-bold">Состояние сервера</h2>
+      <!-- <h2 class="text-4xl font-bold">Состояние сервера</h2>
       <div class="flex gap-4 justify-between w-full px-10">
         <div class="flex flex-col justify-center">
           <StatusGauge :value="50" />
@@ -341,7 +357,7 @@ const greeting = computed(() => {
           <StatusGauge :value="50" />
           <span class="mx-auto text-lg font-semibold">ОЗУ</span>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
   <!-- <div class="w-2/3 mx-auto">
