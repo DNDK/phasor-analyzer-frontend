@@ -67,7 +67,7 @@ onMounted(() => {
   applyOptions(seriesData.value)
   const onResize = () => chart?.resize()
   window.addEventListener('resize', onResize)
-  ;(chart as any)._onResize = onResize
+  ;(chart as Еany)._onResize = onResize
 })
 
 watch(
