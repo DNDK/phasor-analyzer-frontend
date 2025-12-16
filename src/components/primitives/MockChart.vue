@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<{ data?: TUploadedData | null }>(), {
   data: () => ({ curves: [] }),
 })
 
-const el = ref<HTMLDivElement | null>(null)
+const chartEl = ref<HTMLDivElement | null>(null)
 let chart: echarts.ECharts | null = null
 
 const buildOption = (uploaded?: TUploadedData | null): echarts.EChartsOption => {
@@ -61,12 +61,12 @@ const applyOptions = (uploaded?: TUploadedData | null) => {
 }
 
 onMounted(() => {
-  if (!el.value) return
-  chart = echarts.init(el.value)
+  if (!chartEl.value) return
+  chart = echarts.init(chartEl.value)
   applyOptions(props.data)
   const onResize = () => chart?.resize()
   window.addEventListener('resize', onResize)
-  ;(chart as Еany)._onResize = onResize
+  ;(chart as any)._onResize = onResize
 })
 
 watch(
@@ -88,7 +88,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="el" class="h-full w-full my-auto relative">
+  <div class="h-full w-full my-auto relative">
+    <div ref="chartEl" class="h-full w-full"></div>
     <div
       v-if="!hasData"
       class="absolute inset-0 flex items-center justify-center text-gray-500 text-center px-4"

@@ -7,7 +7,7 @@ const modelValue = defineModel<TUploadedData>({ default: () => ({ curves: [] }) 
 
 // const modelValue = defineModel()
 const fileInput = ref<HTMLInputElement>()
-const uploadedData = ref<TUploadedData | null>(modelValue.value || { curves: [] })
+const uploadedData = ref<TUploadedData>(modelValue.value || { curves: [] })
 
 const fileName = ref<string>('')
 
@@ -15,15 +15,14 @@ const fileName = ref<string>('')
 const isDragging = ref(false)
 const dragDepth = ref(0)
 
-const resetData = () => {
-  uploadedData.value = { curves: [] }
-}
-
 const parseCurveSet = (text: string) => {
   // Expected format for phasor workflow with IRF:
   // time  irf  intensity_curve1  intensity_curve2 ...
   // (whitespace / CSV / semicolon separated)
-  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
   if (!lines.length) throw new Error('Файл пустой')
 
   const curves: TCurve[] = []
@@ -61,8 +60,6 @@ const parseCurveSet = (text: string) => {
 }
 
 const readFile = (file: File) => {
-  resetData()
-
   const fileReader = new FileReader()
   fileReader.onload = () => {
     const data = fileReader.result?.toString() || ''
@@ -175,7 +172,10 @@ onBeforeUnmount(() => {
         }
       "
     >
-      <div v-if="!uploadedData.curves.length" class="flex flex-col items-center justify-center w-full mx-auto">
+      <div
+        v-if="!uploadedData.curves.length"
+        class="flex flex-col items-center justify-center w-full mx-auto"
+      >
         <ArrowUpTrayIcon class="size-10" />
         <div class="">
           <span class="text-sky-600 font-semibold">Выберите </span>набор данных или
@@ -184,10 +184,14 @@ onBeforeUnmount(() => {
       </div>
       <div v-else class="w-full overflow-hidden h-full relative">
         <div class="flex items-center justify-between px-4">
-          <div class="font-semibold text-black">Загружено кривых: {{ uploadedData.curves.length }}</div>
+          <div class="font-semibold text-black">
+            Загружено кривых: {{ uploadedData.curves.length }}
+          </div>
           <div class="text-xs text-gray-700">Формат: t | irf | I₁ | I₂ ...</div>
         </div>
-        <div class="grid grid-cols-[80px_80px_repeat(3,minmax(100px,1fr))] gap-2 py-4 w-full px-4 fade-bottom-mask">
+        <div
+          class="grid grid-cols-[80px_80px_repeat(3,minmax(100px,1fr))] gap-2 py-4 w-full px-4 fade-bottom-mask"
+        >
           <span class="font-semibold text-black text-center">t</span>
           <span class="font-semibold text-black text-center">irf</span>
           <span
@@ -197,7 +201,10 @@ onBeforeUnmount(() => {
           >
             {{ curve.name }}
           </span>
-          <template v-for="rowIdx in Math.min(8, uploadedData.curves[0]?.time.length || 0)" :key="rowIdx">
+          <template
+            v-for="rowIdx in Math.min(8, uploadedData.curves[0]?.time.length || 0)"
+            :key="rowIdx"
+          >
             <span class="text-center">{{ uploadedData.curves[0]?.time[rowIdx - 1] }}</span>
             <span class="text-center">{{ uploadedData.curves[0]?.irf[rowIdx - 1] }}</span>
             <span
