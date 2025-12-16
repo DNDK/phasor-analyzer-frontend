@@ -5,73 +5,72 @@ import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import type { TUploadedData } from './types/uploadedData'
 
 const props = withDefaults(defineProps<{ data?: TUploadedData | null }>(), {
-  data: () => ({ time: [], intensity: [] }),
+  data: () => ({ curves: [] }),
 })
 
 const el = ref<HTMLDivElement | null>(null)
 let chart: echarts.ECharts | null = null
 
-const buildSeriesData = (uploaded?: TUploadedData | null): [number, number][] => {
-  const time = uploaded?.time || []
-  const intensity = uploaded?.intensity || []
-  const length = Math.min(time.length, intensity.length)
-  if (!length) return []
+const buildOption = (uploaded?: TUploadedData | null): echarts.EChartsOption => {
+  const curves = uploaded?.curves || []
+  const series =
+    curves
+      .filter((c) => (c.time?.length ?? 0) && (c.intensity?.length ?? 0))
+      .map((curve, idx) => {
+        const length = Math.min(curve.time.length, curve.intensity.length)
+        const data = Array.from({ length }, (_, i) => [Number(curve.time[i]), Number(curve.intensity[i])]).filter(
+          ([t, y]) => Number.isFinite(t) && Number.isFinite(y),
+        )
+        return {
+          type: 'line',
+          name: curve.name || `Кривая ${idx + 1}`,
+          symbolSize: 3,
+          showSymbol: false,
+          data,
+        }
+      }) || []
 
-  return Array.from({ length }, (_, index) => [
-    Number(time[index]),
-    Number(intensity[index]),
-  ]).filter(([t, y]) => Number.isFinite(t) && Number.isFinite(y))
+  return {
+    grid: { left: 50, right: 20, top: 20, bottom: 50, containLabel: true },
+    tooltip: { trigger: 'axis' },
+    xAxis: {
+      type: 'value',
+      name: 't',
+      nameLocation: 'end',
+      nameGap: 30, // больше места под подпись
+    },
+    yAxis: {
+      type: 'value',
+      name: 'I(t)',
+      nameLocation: 'middle',
+      nameGap: 40, // чтобы не прилипало к оси
+      min: series.length ? 'dataMin' : 0,
+      max: series.length ? 'dataMax' : 1,
+    },
+    legend: { show: series.length > 1 },
+    series,
+  }
 }
 
-const buildOption = (seriesData: [number, number][]): echarts.EChartsOption => ({
-  grid: { left: 50, right: 20, top: 20, bottom: 50, containLabel: true },
-  tooltip: { trigger: 'axis' },
-  xAxis: {
-    type: 'value',
-    name: 't',
-    nameLocation: 'end',
-    nameGap: 30, // больше места под подпись
-  },
-  yAxis: {
-    type: 'value',
-    name: 'I(t)',
-    nameLocation: 'middle',
-    nameGap: 40, // чтобы не прилипало к оси
-    min: seriesData.length ? 'dataMin' : 0,
-    max: seriesData.length ? 'dataMax' : 1,
-  },
-  series: [
-    {
-      type: 'scatter',
-      name: 'Экспериментальные измерения',
-      symbolSize: 4,
-      opacity: 0.9,
-      data: seriesData,
-    },
-  ],
-})
+const hasData = computed(() => (props.data?.curves?.length ?? 0) > 0)
 
-const seriesData = computed(() => buildSeriesData(props.data))
-
-const hasData = computed(() => seriesData.value.length > 0)
-
-const applyOptions = (seriesData: [number, number][]) => {
+const applyOptions = (uploaded?: TUploadedData | null) => {
   if (!chart) return
   chart.clear()
-  chart.setOption(buildOption(seriesData), { notMerge: true })
+  chart.setOption(buildOption(uploaded), { notMerge: true })
 }
 
 onMounted(() => {
   if (!el.value) return
   chart = echarts.init(el.value)
-  applyOptions(seriesData.value)
+  applyOptions(props.data)
   const onResize = () => chart?.resize()
   window.addEventListener('resize', onResize)
   ;(chart as Еany)._onResize = onResize
 })
 
 watch(
-  seriesData,
+  () => props.data,
   (newValue) => {
     if (!chart) return
     applyOptions(newValue)
@@ -94,7 +93,7 @@ onBeforeUnmount(() => {
       v-if="!hasData"
       class="absolute inset-0 flex items-center justify-center text-gray-500 text-center px-4"
     >
-      Provide the data first
+      Загрузите набор кривых для предварительного просмотра
     </div>
   </div>
 </template>

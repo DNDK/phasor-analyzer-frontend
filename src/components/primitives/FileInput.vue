@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { TUploadedData } from './types/uploadedData'
+import type { TUploadedData, TCurve } from './types/uploadedData'
 
-const modelValue = defineModel<TUploadedData>()
+const modelValue = defineModel<TUploadedData>({ default: () => ({ curves: [] }) })
 
 // const modelValue = defineModel()
 const fileInput = ref<HTMLInputElement>()
-const uploadedData = ref<TUploadedData | null>({ time: [], intensity: [] })
+const uploadedData = ref<TUploadedData | null>(modelValue.value || { curves: [] })
 
 const fileName = ref<string>('')
 
@@ -15,31 +15,49 @@ const fileName = ref<string>('')
 const isDragging = ref(false)
 const dragDepth = ref(0)
 
-const readByCols = (text: string) => {
-  const lines = text.split(/\r?\n/)
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-
-    // пропускаем пустые строки
-    if (!line) continue
-
-    const parts = line.split(/\s+/)
-
-    if (parts.length !== 2) {
-      throw new Error('Each line must contain exactly two columns of data.')
-    }
-    try {
-      uploadedData.value?.time.push(parseFloat(parts[0]))
-      uploadedData.value?.intensity.push(parseFloat(parts[1]))
-    } catch {
-      throw new Error('Data must be numerical.')
-    }
-  }
+const resetData = () => {
+  uploadedData.value = { curves: [] }
 }
 
-const resetData = () => {
-  uploadedData.value = { time: [], intensity: [] }
+const parseCurveSet = (text: string) => {
+  // Expected format for phasor workflow with IRF:
+  // time  irf  intensity_curve1  intensity_curve2 ...
+  // (whitespace / CSV / semicolon separated)
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+  if (!lines.length) throw new Error('Файл пустой')
+
+  const curves: TCurve[] = []
+  lines.forEach((line, lineIdx) => {
+    const parts = line.split(/[\s,;]+/).filter(Boolean)
+    if (parts.length < 3) {
+      throw new Error(`Строка ${lineIdx + 1}: минимум 3 колонки (time, irf, intensity...)`)
+    }
+    const numbers = parts.map((p) => Number(p))
+    if (numbers.some((n) => Number.isNaN(n))) {
+      throw new Error(`Строка ${lineIdx + 1}: все значения должны быть числами`)
+    }
+
+    const [time, irfValue, ...intensities] = numbers
+    if (!curves.length) {
+      intensities.forEach((_, idx) => {
+        curves.push({ name: `Кривая ${idx + 1}`, time: [], intensity: [], irf: [] })
+      })
+    } else if (curves.length !== intensities.length) {
+      throw new Error(
+        `Строка ${lineIdx + 1}: количество кривых не совпадает (${intensities.length} vs ${curves.length})`,
+      )
+    }
+
+    intensities.forEach((intens, idx) => {
+      curves[idx].time.push(time)
+      curves[idx].intensity.push(intens)
+      curves[idx].irf.push(irfValue)
+    })
+  })
+
+  if (!curves.length) throw new Error('Не удалось создать набор кривых')
+
+  uploadedData.value = { curves }
 }
 
 const readFile = (file: File) => {
@@ -49,10 +67,11 @@ const readFile = (file: File) => {
   fileReader.onload = () => {
     const data = fileReader.result?.toString() || ''
     try {
-      readByCols(data)
+      parseCurveSet(data)
       fileName.value = file.name
     } catch (e) {
       console.error(e)
+      alert(e instanceof Error ? e.message : 'Ошибка разбора файла')
     }
   }
 
@@ -69,11 +88,6 @@ const handleFileChange = () => {
     return
   }
 
-  if (files[0].type !== 'text/plain') {
-    console.log(files[0].type)
-    return
-  }
-
   readFile(files[0])
 }
 
@@ -82,7 +96,6 @@ const handleFileDrop = (event: DragEvent) => {
 
   const file = event.dataTransfer?.files?.[0]
   if (!file) return
-  if (file.type === 'text/plain') return
 
   readFile(file)
 
@@ -116,7 +129,17 @@ const handleGlobalDrop = (event: DragEvent) => {
 watch(
   uploadedData,
   (newValue) => {
-    modelValue.value = newValue! || null
+    modelValue.value = newValue || { curves: [] }
+  },
+  { deep: true },
+)
+
+watch(
+  () => modelValue.value,
+  (newValue) => {
+    if (newValue && uploadedData.value !== newValue) {
+      uploadedData.value = newValue
+    }
   },
   { deep: true },
 )
@@ -152,10 +175,7 @@ onBeforeUnmount(() => {
         }
       "
     >
-      <div
-        v-if="!uploadedData.time.length || !uploadedData.intensity.length"
-        class="flex flex-col items-center justify-center w-full mx-auto"
-      >
+      <div v-if="!uploadedData.curves.length" class="flex flex-col items-center justify-center w-full mx-auto">
         <ArrowUpTrayIcon class="size-10" />
         <div class="">
           <span class="text-sky-600 font-semibold">Выберите </span>набор данных или
@@ -163,19 +183,31 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div v-else class="w-full overflow-hidden h-full relative">
-        <div class="grid grid-cols-2 py-4 w-fit mx-auto fade-bottom-mask">
-          <span class="mx-auto font-semibold text-black">Время</span>
-          <span class="mx-auto font-semibold text-black">Интенсивность</span>
-          <div class="flex flex-col gap-1 mx-auto">
-            <span v-for="(t, i) in uploadedData.time.slice(0, 8)" :key="i">
-              {{ t }}
+        <div class="flex items-center justify-between px-4">
+          <div class="font-semibold text-black">Загружено кривых: {{ uploadedData.curves.length }}</div>
+          <div class="text-xs text-gray-700">Формат: t | irf | I₁ | I₂ ...</div>
+        </div>
+        <div class="grid grid-cols-[80px_80px_repeat(3,minmax(100px,1fr))] gap-2 py-4 w-full px-4 fade-bottom-mask">
+          <span class="font-semibold text-black text-center">t</span>
+          <span class="font-semibold text-black text-center">irf</span>
+          <span
+            v-for="curve in uploadedData.curves.slice(0, 3)"
+            :key="curve.name"
+            class="font-semibold text-black text-center"
+          >
+            {{ curve.name }}
+          </span>
+          <template v-for="rowIdx in Math.min(8, uploadedData.curves[0]?.time.length || 0)" :key="rowIdx">
+            <span class="text-center">{{ uploadedData.curves[0]?.time[rowIdx - 1] }}</span>
+            <span class="text-center">{{ uploadedData.curves[0]?.irf[rowIdx - 1] }}</span>
+            <span
+              v-for="curve in uploadedData.curves.slice(0, 3)"
+              :key="`${curve.name}-${rowIdx}`"
+              class="text-center"
+            >
+              {{ curve.intensity[rowIdx - 1] }}
             </span>
-          </div>
-          <div class="flex flex-col gap-1 mx-auto">
-            <span v-for="(intens, i) in uploadedData.intensity.slice(0, 8)" :key="i">
-              {{ intens }}
-            </span>
-          </div>
+          </template>
         </div>
         <div class="absolute bottom-0 w-full py-4 text-center text-black font-semibold">
           <div
@@ -185,14 +217,17 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
-      <input type="file" class="hidden" ref="fileInput" @change="handleFileChange" />
+      <input
+        type="file"
+        class="hidden"
+        ref="fileInput"
+        accept=".txt,.csv,text/plain,text/csv"
+        @change="handleFileChange"
+      />
     </div>
 
-    <Teleport to="body">
-      <div
-        v-if="isDragging"
-        class="fixed inset-0 bg-white/40 backdrop-blur-sm pointer-events-none z-20 transition"
-      />
+    <Teleport v-if="isDragging && typeof document !== 'undefined'" to="body">
+      <div class="fixed inset-0 bg-white/40 backdrop-blur-sm pointer-events-none z-20 transition" />
     </Teleport>
   </div>
 </template>

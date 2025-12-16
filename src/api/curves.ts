@@ -1,6 +1,5 @@
 import { useFetch } from '@vueuse/core'
 
-import type { TUploadedData } from '@/components/primitives/types/uploadedData'
 import type { CurveSet } from '@/types/curveSet'
 
 type UploadCurveSetPayload = {

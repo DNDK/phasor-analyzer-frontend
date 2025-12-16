@@ -1,6 +1,12 @@
-type TUploadedData = {
+type TCurve = {
+  name: string
   time: number[]
   intensity: number[]
+  irf: number[]
 }
 
-export { type TUploadedData }
+type TUploadedData = {
+  curves: TCurve[]
+}
+
+export { type TUploadedData, type TCurve }

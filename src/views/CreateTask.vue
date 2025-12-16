@@ -26,7 +26,7 @@ const props = defineProps<{
   task?: Task
 }>()
 
-const dataInput = ref<TUploadedData>({ time: [], intensity: [] })
+const dataInput = ref<TUploadedData>({ curves: [] })
 
 const analysisResult = ref<AnalysisResult | null>(null)
 const taskId = ref<number | null>(null)
@@ -57,9 +57,29 @@ const statusBadgeLabel: Record<StepStatus, string> = {
   error: 'Ошибка',
 }
 
-const hasInputData = computed(
-  () => (dataInput.value.time?.length ?? 0) > 0 && (dataInput.value.intensity?.length ?? 0) > 0,
-)
+const inputValidationMessage = computed<string | null>(() => {
+  console.log(dataInput.value)
+  const curves = dataInput.value?.curves || []
+  if (!curves.length) return 'Загрузите файл с кривыми (формат: t | irf | I₁ | I₂ ...)'
+
+  for (const [idx, c] of curves.entries()) {
+    const len = c.time?.length ?? 0
+    if (!len) return `Кривая ${idx + 1}: нет точек`
+    if ((c.intensity?.length ?? 0) !== len)
+      return `Кривая ${idx + 1}: длина intensity не совпадает с time`
+    if ((c.irf?.length ?? 0) !== len) return `Кривая ${idx + 1}: длина IRF не совпадает с time`
+    if (c.time.some((v) => !Number.isFinite(v)))
+      return `Кривая ${idx + 1}: некорректные значения времени`
+    if (c.intensity.some((v) => !Number.isFinite(v)))
+      return `Кривая ${idx + 1}: некорректные значения интенсивности`
+    if (c.irf.some((v) => !Number.isFinite(v)))
+      return `Кривая ${idx + 1}: некорректные значения IRF`
+  }
+
+  return null
+})
+
+const hasInputData = computed(() => !inputValidationMessage.value)
 
 const aCoeffs = computed(() => {
   if (!analysisResult.value) return []
@@ -111,7 +131,8 @@ const workflowSteps = computed(() => {
     {
       key: 'curves',
       title: 'Загрузка кривых',
-      description: 'POST /api/curves/upload — отправляем time_axis и intensity в созданную задачу.',
+      description:
+        'POST /api/curves/upload — отправляем набор кривых: time_axis и intensity для каждой колонки.',
       status: uploadStatus,
     },
     {
@@ -124,10 +145,13 @@ const workflowSteps = computed(() => {
 })
 
 const stepStatusByKey = computed<Record<string, StepStatus>>(() =>
-  workflowSteps.value.reduce((acc, step) => {
-    acc[step.key] = step.status
-    return acc
-  }, {} as Record<string, StepStatus>),
+  workflowSteps.value.reduce(
+    (acc, step) => {
+      acc[step.key] = step.status
+      return acc
+    },
+    {} as Record<string, StepStatus>,
+  ),
 )
 
 const runFullAnalysis = async () => {
@@ -157,12 +181,11 @@ const runFullAnalysis = async () => {
     const uploadPayload = {
       task_id: createdTask.id,
       description: 'User uploaded dataset',
-      curves: [
-        {
-          time_axis: dataInput.value.time,
-          intensity: dataInput.value.intensity,
-        },
-      ],
+      curves: dataInput.value.curves.map((curve) => ({
+        time_axis: curve.time,
+        intensity: curve.intensity,
+        irf: curve.irf,
+      })),
     }
     const uploadResponse = await uploadCurveSetFromData(uploadPayload)
     if (uploadResponse.error.value) {
@@ -240,9 +263,13 @@ const runFullAnalysis = async () => {
             <p class="text-gray-700 text text-justify">
               Набор экспериментальных данных — это временная зависимость интенсивности флюоресценции
               после импульса возбуждения (кривая затухания), которая была получена в ходе измерений.
+              Для набора кривых используйте файл с несколькими колонками: первая — время, вторая —
+              IRF, последующие — интенсивности отдельных кривых (формат: t | irf | I₁ | I₂ ...).
             </p>
           </div>
-          <div class="bg-white/20 border-white/50 border h-full col-span-2 rounded-lg backdrop-blur-3xl p-5">
+          <div
+            class="bg-white/20 border-white/50 border h-full col-span-2 rounded-lg backdrop-blur-3xl p-5"
+          >
             <FileInput v-model="dataInput" />
           </div>
           <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl my-auto">
@@ -360,9 +387,15 @@ const runFullAnalysis = async () => {
         </div>
       </div>
       <div class="mt-8 flex w-full justify-end gap-4">
+        <div class="text-xs text-gray-600 mr-auto">
+          <div v-if="inputValidationMessage" class="text-red-700">
+            {{ inputValidationMessage }}
+          </div>
+          <div v-else>Загружено кривых: {{ dataInput.curves?.length || 0 }}</div>
+        </div>
         <button
           class="px-6 py-2 rounded-lg border flex gap-4 hover:cursor-pointer bg-linear-30 from-sky-200/50 to-sky-200 disabled:opacity-60 disabled:cursor-not-allowed"
-          :disabled="isSubmitting || !hasInputData"
+          :disabled="isSubmitting"
           @click="runFullAnalysis"
         >
           <ArrowUpTrayIcon class="size-6 text-black/60" />
