@@ -22,6 +22,7 @@ import {
   LinearScale,
   PointElement,
 } from 'chart.js'
+import type { ChartOptions } from 'chart.js'
 
 // Register the necessary Chart.js components
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement)
@@ -91,7 +92,7 @@ const chartData = computed(() => {
 })
 
 // Define chart options
-const chartOptions = {
+const chartOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false, // Allow the chart to fill its container
   scales: {
@@ -111,7 +112,7 @@ const chartOptions = {
   plugins: {
     legend: {
       display: true,
-      position: 'top' as const,
+      position: 'top',
     },
     tooltip: {
       enabled: true,
