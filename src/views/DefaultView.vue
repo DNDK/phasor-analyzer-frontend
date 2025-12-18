@@ -5,7 +5,6 @@ import { ArrowRightIcon } from '@heroicons/vue/24/outline'
 
 import { getAllTasks } from '@/api/tasks'
 import type { Task } from '@/types/task'
-import StatusGauge from '@/components/primitives/StatusGauge.vue'
 
 const tasks = ref<Task[] | null>(null)
 
@@ -33,64 +32,40 @@ const tasksWithResults = computed(
 </script>
 
 <template>
-  <div class="space-y-12">
+  <div class="space-y-12 w-full flex flex-col justify-center items-center">
     <section
-      class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-900 via-cyan-700 to-sky-600 text-white shadow-xl"
+      class="rounded-3xl border border-slate-100 bg-gradient-to-r from-sky-50 via-white to-cyan-50 shadow-lg shadow-sky-50 px-10 py-12 mb-12 w-full"
     >
-      <div
-        class="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.12),_transparent_45%)] blur-3xl"
-      />
-      <div class="absolute -left-20 -bottom-32 size-96 rounded-full bg-white/10 blur-3xl" />
-      <div class="relative px-12 py-14 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-        <div class="space-y-6">
-          <p class="text-sm uppercase tracking-[0.2em] text-white/70">{{ greeting }}</p>
-          <h1 class="text-5xl font-bold leading-tight">
-            Фазовый анализ кривых <span class="text-sky-200">в один клик</span>
-          </h1>
-          <p class="text-lg text-white/80">
-            Загружайте кривые затухания, запускайте расчёт и сравнивайте результаты — Analyzer
-            собирает кривые, коэффициенты и времена жизни на одном экране.
+      <div class="grid lg:grid-cols-2 gap-8 items-center">
+        <div class="lg:col-span-2 space-y-4">
+          <!-- <p class="text-sm uppercase tracking-[0.2em] text-sky-800 font-semibold">Приветствие</p> -->
+          <h1 class="text-4xl font-bold text-slate-900">{{ greeting }}</h1>
+          <p class="text-base text-slate-700 max-w-3xl leading-7">
+            Подготовьте данные, запустите анализ и сравните результаты с предыдущими задачами.
+            Используйте историю для быстрых сравнений и возвращения к расчётам.
           </p>
-          <div class="flex flex-wrap gap-4">
+          <div class="flex flex-wrap gap-3">
             <RouterLink
               to="/create-task"
-              class="inline-flex items-center gap-2 rounded-xl bg-white text-sky-900 px-5 py-3 text-sm font-semibold shadow-lg shadow-sky-900/40 hover:-translate-y-0.5 transition"
+              class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-50"
             >
-              Начать новую задачу
-              <ArrowRightIcon class="size-5" />
+              Создать задачу
+              <ArrowRightIcon class="size-4" />
             </RouterLink>
             <RouterLink
               to="/tasks"
-              class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-white"
             >
               История задач
+              <ArrowRightIcon class="size-4" />
             </RouterLink>
-          </div>
-        </div>
-        <div
-          class="grid grid-cols-3 gap-8 bg-white/5 rounded-2xl border border-white/10 p-5 backdrop-blur"
-        >
-          <div class="stat-tile">
-            <div class="text-xs text-white/60">Всего задач</div>
-            <div class="text-4xl font-bold">{{ tasksTotal }}</div>
-            <div class="text-xs text-white/60">обработаны или в очереди</div>
-          </div>
-          <div class="stat-tile">
-            <div class="text-xs text-white/60">С готовыми результатами</div>
-            <div class="text-4xl font-bold text-emerald-200">{{ tasksWithResults }}</div>
-            <div class="text-xs text-white/60">коэффициенты и tau рассчитаны</div>
-          </div>
-          <div class="stat-tile">
-            <div class="text-xs text-white/60">API</div>
-            <div class="text-4xl font-bold">/api</div>
-            <div class="text-xs text-white/60">FastAPI · ECharts · Vue 3</div>
           </div>
         </div>
       </div>
     </section>
 
     <section class="grid lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 space-y-6">
+      <div class="lg:col-span-2 flex flex-col gap-6">
         <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-8">
           <div class="flex items-center justify-between mb-6">
             <div>
@@ -140,7 +115,7 @@ const tasksWithResults = computed(
               Все задачи
             </RouterLink>
           </div>
-          <div class="space-y-3">
+          <div class="flex flex-col gap-4">
             <RouterLink
               v-for="task in tasks?.slice(0, 5) || []"
               :key="task.id"
@@ -167,38 +142,6 @@ const tasksWithResults = computed(
               Список пуст — создайте первую задачу, чтобы увидеть её здесь.
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="space-y-6">
-        <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
-          <h3 class="text-lg font-semibold mb-3">Мониторинг</h3>
-          <div class="flex gap-6 justify-between w-full">
-            <div class="flex flex-col items-center gap-2">
-              <StatusGauge :value="70" />
-              <span class="text-sm font-semibold text-slate-700">CPU</span>
-            </div>
-            <div class="flex flex-col items-center gap-2">
-              <StatusGauge :value="55" />
-              <span class="text-sm font-semibold text-slate-700">RAM</span>
-            </div>
-          </div>
-          <p class="text-xs text-slate-500 mt-4">Данные условные — подключите реальные метрики.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
-          <h3 class="text-lg font-semibold mb-3">Шаблоны запусков</h3>
-          <ul class="space-y-2 text-sm text-slate-700">
-            <li>• Базовый скан — быстрый прогон с шумом</li>
-            <li>• Полный спектр — несколько кривых с IRF</li>
-            <li>• Пользовательские данные — CSV/TSV загрузка</li>
-          </ul>
-          <RouterLink
-            to="/create-task"
-            class="mt-4 inline-flex items-center gap-2 rounded-lg border border-sky-200 px-3 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-50"
-          >
-            Открыть конструктор
-            <ArrowRightIcon class="size-4" />
-          </RouterLink>
         </div>
       </div>
     </section>

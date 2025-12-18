@@ -208,220 +208,209 @@ const runFullAnalysis = async () => {
 </script>
 
 <template>
-  <div class="h-full">
-    <div class="w-3/4 mx-auto">
-      <h1 class="text-3xl font-bold mb-8 leading-8">
-        {{ props.mode === 'view' ? props.task?.title : 'Новая задача' }}
-      </h1>
-      <div class="flex flex-wrap gap-3 mb-6">
-        <div
-          v-for="step in workflowSteps"
-          :key="step.key"
-          class="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/40 bg-white/30 backdrop-blur"
-        >
-          <span class="text-sm font-semibold">{{ step.title }}</span>
-          <span
-            class="px-2 py-1 rounded-md border text-xs font-semibold"
-            :class="statusBadgeClass(step.status)"
-          >
-            {{ statusBadgeLabel[step.status] }}
-          </span>
-        </div>
-      </div>
-      <div class="border rounded-lg relative overflow-hidden space-y-15 p-14 card-background">
-        <div class="absolute -top-30 -left-30 opacity-10 size-300 rotate-50">
-          <img src="/hexagons.svg" class="size-full" />
-        </div>
-        <div class="absolute -bottom-80 -right-80 opacity-10 size-300 rotate-50">
-          <img src="/hexagons.svg" class="size-full" />
-        </div>
-        <!-- <div
-          class="bg-radial from-sky-600/30 to-sky-600/15 size-200 rounded-md absolute -top-100 -left-100 -z-20 blur-2xl"
-        />
-        <div
-          class="bg-radial from-sky-500/20 to-sky-500/5 size-150 rounded-md absolute -bottom-100 -right-100 -z-20 blur-2xl"
-        />
-        <div
-          class="bg-radial from-sky-500/40 to-sky-500/10 size-100 rounded-md absolute -top-25 right-50 -z-20 blur-2xl"
-        /> -->
-        <!-- <h1
-          class="text-4xl font-bold bg-white w-full leading-24 sticky top-0 px-14 py-7 z-40   "
-        >
-          Новая задача
-        </h1> -->
-        <div class="gap-10 grid grid-cols-3 w-full">
-          <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl">
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold leading-10 text-lg">Исходные данные</h3>
-              <span
-                class="px-2 py-1 rounded-md border text-xs font-semibold"
-                :class="statusBadgeClass(stepStatusByKey.upload)"
-              >
-                {{ statusBadgeLabel[stepStatusByKey.upload] }}
-              </span>
-            </div>
-            <p class="text-gray-700 text text-justify">
-              Набор экспериментальных данных — это временная зависимость интенсивности флюоресценции
-              после импульса возбуждения (кривая затухания), которая была получена в ходе измерений.
-              Для набора кривых используйте файл с несколькими колонками: первая — время, вторая —
-              IRF, последующие — интенсивности отдельных кривых (формат: t | irf | I₁ | I₂ ...).
-            </p>
+  <div class="space-y-10">
+    <section
+      class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-900 via-cyan-700 to-sky-600 text-white shadow-xl"
+    >
+      <div
+        class="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.12),_transparent_45%)] blur-3xl"
+      />
+      <div class="absolute -left-20 -bottom-32 size-96 rounded-full bg-white/10 blur-3xl" />
+      <div class="relative px-10 py-12 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-white/70">Конструктор</p>
+            <h1 class="text-4xl font-bold leading-tight">
+              {{ props.mode === 'view' ? props.task?.title : 'Новая задача' }}
+            </h1>
           </div>
-          <div
-            class="bg-white/20 border-white/50 border h-full col-span-2 rounded-lg backdrop-blur-3xl p-5"
-          >
-            <FileInput v-model="dataInput" />
-          </div>
-          <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl my-auto">
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold leading-10 text-lg">Визуализация исходных данных</h3>
-              <span class="text-xs text-gray-600">После загрузки</span>
-            </div>
-            <p class="text-gray-700 text text-justify">
-              Кривая затухания — это запись того, как изменяется интенсивность флюоресценции во
-              времени после короткого импульса возбуждения.
-            </p>
-          </div>
-          <div
-            class="bg-white/20 border-white/50 border w-full col-span-2 rounded-lg gap-10 items-center justify-center text-gray-400 p-5 py-auto h-96 relative backdrop-blur-3xl"
-          >
-            <MockChart :data="dataInput || null" />
-          </div>
-          <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl my-auto">
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold leading-10 text-lg">Данные после обработки</h3>
-              <span
-                class="px-2 py-1 rounded-md border text-xs font-semibold"
-                :class="statusBadgeClass(stepStatusByKey.analysis)"
-              >
-                {{ statusBadgeLabel[stepStatusByKey.analysis] }}
-              </span>
-            </div>
-            <p class="text-gray-700 text text-justify">
-              После запуска /api/analysis/start исходная кривая преобразуется в фазовое
-              представление. Здесь появится очищенная кривая, когда анализ начнётся.
-            </p>
-          </div>
-          <div
-            class="bg-white/20 border-white/50 border w-full col-span-2 rounded-lg gap-10 items-center justify-center text-gray-400 p-5 py-auto h-96 relative backdrop-blur-3xl"
-          >
+          <div class="flex flex-wrap gap-2">
             <div
-              v-if="!analysisStarted"
-              class="absolute inset-0 flex items-center justify-center text-sm text-gray-600"
+              v-for="step in workflowSteps"
+              :key="step.key"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur"
             >
-              Запустите анализ, чтобы увидеть обработанные данные
-            </div>
-            <MockChartClean v-else />
-          </div>
-          <div class="bg-white/20 border-gray-100 border p-5 rounded-lg backdrop-blur-3xl my-auto">
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold leading-10 text-lg">Результаты анализа</h3>
+              <span class="text-sm font-semibold">{{ step.title }}</span>
               <span
                 class="px-2 py-1 rounded-md border text-xs font-semibold"
-                :class="statusBadgeClass(stepStatusByKey.analysis)"
+                :class="statusBadgeClass(step.status)"
               >
-                {{ statusBadgeLabel[stepStatusByKey.analysis] }}
+                {{ statusBadgeLabel[step.status] }}
               </span>
-            </div>
-            <p class="text-gray-700 text text-justify">
-              Параметры a₁, a₂, а также τ₁ и τ₂ — это результаты аппроксимации кривой затухания
-              биэкспоненциальной моделью. Коэффициенты a₁, a₂ задают вклад каждой компоненты, а
-              времена жизни τ₁ и τ₂ отражают скорость затухания двух независимых процессов.
-            </p>
-          </div>
-          <div
-            class="bg-white/20 border-white/50 border w-full col-span-2 rounded-lg gap-10 items-center justify-center p-8 py-auto relative space-y-4 backdrop-blur-3xl"
-          >
-            <div class="font-semibold flex items-center gap-2">
-              <span>
-                По результатам анализа кривых затухания методом фазовых векторов были получены
-                следующие значения
-              </span>
-              <span v-if="taskId" class="text-xs text-gray-600">(task #{{ taskId }})</span>
-            </div>
-            <div v-if="submitError" class="text-red-600 text-sm">{{ submitError }}</div>
-            <div v-if="!analysisResult" class="text-sm text-gray-600">
-              Загрузите данные и нажмите «Запустить анализ», чтобы увидеть результаты.
-            </div>
-            <div v-else class="space-y-4 w-full">
-              <div>
-                <span>Предэкспоненциальные коэффициенты</span>
-                <Table>
-                  <TableCaption>Коэффициенты a1, a2 для набора</TableCaption>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead> № </TableHead>
-                      <TableHead> a1 </TableHead>
-                      <TableHead> a2</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow v-for="row in aCoeffs" :key="row.index">
-                      <TableCell class="font-medium"> {{ row.index }} </TableCell>
-                      <TableCell>{{ row.a1?.toFixed(4) }}</TableCell>
-                      <TableCell>{{ row.a2?.toFixed(4) }}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-              <div>
-                <span>Времена жизни</span>
-                <Table>
-                  <TableCaption>Времена жизни TAU1, TAU2 для набора</TableCaption>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead> TAU1 </TableHead>
-                      <TableHead> TAU2</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>{{ analysisResult?.tau1?.toFixed(4) }}</TableCell>
-                      <TableCell>{{ analysisResult?.tau2?.toFixed(4) }}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="mt-8 flex w-full justify-end gap-4">
-        <div class="text-xs text-gray-600 mr-auto">
-          <div v-if="inputValidationMessage" class="text-red-700">
+        <p class="text-white/80 max-w-3xl">
+          Загрузите кривые, создайте задачу и запустите анализ фазовых векторов. Результаты tau и
+          коэффициентов появятся сразу после обработки.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <button
+            class="inline-flex items-center gap-2 rounded-xl bg-white text-sky-900 px-5 py-3 text-sm font-semibold shadow-lg shadow-sky-900/40 hover:-translate-y-0.5 transition disabled:opacity-60"
+            :disabled="isSubmitting"
+            @click="runFullAnalysis"
+          >
+            <ArrowUpTrayIcon class="size-5" />
+            {{ isSubmitting ? 'Запускаем...' : 'Запустить анализ' }}
+            <ArrowRightIcon class="size-4" />
+          </button>
+          <button
+            class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
+          >
+            <img src="/pdficon.svg" class="size-5" />
+            Экспортировать в PDF
+            <ArrowRightIcon class="size-4" />
+          </button>
+          <div class="text-xs text-white/80 flex items-center" v-if="inputValidationMessage">
             {{ inputValidationMessage }}
           </div>
-          <div v-else>Загружено кривых: {{ dataInput.curves?.length || 0 }}</div>
+          <div class="text-xs text-white/80 flex items-center" v-else>
+            Загружено кривых: {{ dataInput.curves?.length || 0 }}
+          </div>
         </div>
-        <button
-          class="px-6 py-2 rounded-lg border flex gap-4 hover:cursor-pointer bg-linear-30 from-sky-200/50 to-sky-200 disabled:opacity-60 disabled:cursor-not-allowed"
-          :disabled="isSubmitting"
-          @click="runFullAnalysis"
-        >
-          <ArrowUpTrayIcon class="size-6 text-black/60" />
-          {{ isSubmitting ? 'Запускаем...' : 'Запустить анализ' }}
-          <ArrowRightIcon class="size-6 text-black/40" />
-        </button>
-        <button
-          class="px-6 py-2 rounded-lg border flex gap-4 hover:cursor-pointer bg-linear-30 from-sky-200/50 to-sky-200"
-        >
-          <img src="/pdficon.svg" class="size-6" />
-          Экспортировать в PDF
-          <ArrowRightIcon class="size-6 text-black/40" />
-        </button>
       </div>
-    </div>
+    </section>
+
+    <section class="grid lg:grid-cols-3 gap-6">
+      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-lg text-slate-900">Исходные данные</h3>
+          <span
+            class="px-2 py-1 rounded-md border text-xs font-semibold"
+            :class="statusBadgeClass(stepStatusByKey.upload)"
+          >
+            {{ statusBadgeLabel[stepStatusByKey.upload] }}
+          </span>
+        </div>
+        <p class="text-slate-700 text-sm leading-6">
+          Набор экспериментальных данных — временная зависимость интенсивности флюоресценции.
+          Используйте файл с колонками: время, IRF, далее интенсивности кривых (t | irf | I₁ | I₂
+          ...).
+        </p>
+      </div>
+      <div
+        class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6"
+      >
+        <FileInput v-model="dataInput" />
+      </div>
+    </section>
+
+    <section class="grid lg:grid-cols-3 gap-6">
+      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-lg text-slate-900">Визуализация исходных данных</h3>
+          <span class="text-xs text-slate-500">После загрузки</span>
+        </div>
+        <p class="text-slate-700 text-sm leading-6">
+          Кривая затухания показывает, как меняется интенсивность после импульса возбуждения.
+        </p>
+      </div>
+      <div
+        class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 h-96 flex items-center justify-center"
+      >
+        <MockChart :data="dataInput || null" />
+      </div>
+    </section>
+
+    <section class="grid lg:grid-cols-3 gap-6">
+      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-lg text-slate-900">Данные после обработки</h3>
+          <span
+            class="px-2 py-1 rounded-md border text-xs font-semibold"
+            :class="statusBadgeClass(stepStatusByKey.analysis)"
+          >
+            {{ statusBadgeLabel[stepStatusByKey.analysis] }}
+          </span>
+        </div>
+        <p class="text-slate-700 text-sm leading-6">
+          После запуска /api/analysis/start исходная кривая преобразуется в фазовое представление.
+          Здесь появится очищенная кривая, когда анализ начнётся.
+        </p>
+      </div>
+      <div
+        class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 h-96 relative flex items-center justify-center"
+      >
+        <div
+          v-if="!analysisStarted"
+          class="absolute inset-0 flex items-center justify-center text-sm text-slate-600"
+        >
+          Запустите анализ, чтобы увидеть обработанные данные
+        </div>
+        <MockChartClean v-else />
+      </div>
+    </section>
+
+    <section class="grid lg:grid-cols-3 gap-6">
+      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-lg text-slate-900">Результаты анализа</h3>
+          <span
+            class="px-2 py-1 rounded-md border text-xs font-semibold"
+            :class="statusBadgeClass(stepStatusByKey.analysis)"
+          >
+            {{ statusBadgeLabel[stepStatusByKey.analysis] }}
+          </span>
+        </div>
+        <p class="text-slate-700 text-sm leading-6">
+          Параметры a₁, a₂ и τ₁, τ₂ — результаты аппроксимации биэкспоненциальной моделью.
+          Коэффициенты отражают вклад компонентов, времена жизни — скорость затухания процессов.
+        </p>
+      </div>
+      <div
+        class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 space-y-4"
+      >
+        <div class="font-semibold flex items-center gap-2 text-slate-900">
+          <span>
+            Результаты анализа кривых затухания методом фазовых векторов
+          </span>
+          <span v-if="taskId" class="text-xs text-slate-500">(task #{{ taskId }})</span>
+        </div>
+        <div v-if="submitError" class="text-red-600 text-sm">{{ submitError }}</div>
+        <div v-if="!analysisResult" class="text-sm text-slate-600">
+          Загрузите данные и нажмите «Запустить анализ», чтобы увидеть результаты.
+        </div>
+        <div v-else class="space-y-4 w-full">
+          <div>
+            <span class="font-semibold text-slate-900">Предэкспоненциальные коэффициенты</span>
+            <Table>
+              <TableCaption>Коэффициенты a1, a2 для набора</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead> № </TableHead>
+                  <TableHead> a1 </TableHead>
+                  <TableHead> a2</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="row in aCoeffs" :key="row.index">
+                  <TableCell class="font-medium"> {{ row.index }} </TableCell>
+                  <TableCell>{{ row.a1?.toFixed(4) }}</TableCell>
+                  <TableCell>{{ row.a2?.toFixed(4) }}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          <div>
+            <span class="font-semibold text-slate-900">Времена жизни</span>
+            <Table>
+              <TableCaption>Времена жизни TAU1, TAU2 для набора</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead> TAU1 </TableHead>
+                  <TableHead> TAU2</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{{ analysisResult?.tau1?.toFixed(4) }}</TableCell>
+                  <TableCell>{{ analysisResult?.tau2?.toFixed(4) }}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
-
-<style scoped>
-.card-background {
-  background: #83a4d4; /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #b6fbff, #83a4d4); /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(
-    to right,
-    #b6fbff,
-    #83a4d4
-  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-}
-</style>

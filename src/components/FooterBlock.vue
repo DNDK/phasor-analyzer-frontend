@@ -1,34 +1,55 @@
 <template>
-  <footer class="w-full min-h-70 footer-background px-16 py-8 relative overflow-hidden">
-    <img src="/lines.svg" class="absolute top-0 right-20 -rotate-15 scale-130 opacity-40" />
+  <footer class="relative w-full border-t border-white/70 bg-slate-900 text-white overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-sky-500/20 via-cyan-400/10 to-transparent" />
+    <div class="absolute -bottom-24 -right-16 size-72 rounded-full bg-sky-400/20 blur-3xl" />
+    <div class="absolute -top-28 left-0 size-80 rounded-full bg-cyan-300/15 blur-3xl" />
 
-    <div class="grid grid-cols-3 w-full z-50 relative">
-      <div>
-        <h2 class="text-4xl mb-6">Analyzer</h2>
-        <h3>Дубовец А. С.</h3>
-        <h3>Дигрис А. В.</h3>
+    <div class="relative mx-auto max-w-7xl px-10 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="size-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center font-bold">
+            A
+          </div>
+          <div>
+            <div class="text-xl font-bold">Analyzer</div>
+            <div class="text-xs text-white/70">Фазовый анализ кривых</div>
+          </div>
+        </div>
+        <p class="text-sm text-white/70 max-w-sm">
+          Обработка кривых затухания флюоресценции с помощью метода фазовых векторов.
+        </p>
+        <div class="flex gap-3 text-xs text-white/60">
+          <span class="px-3 py-1 rounded-full border border-white/20 bg-white/5">FastAPI</span>
+          <span class="px-3 py-1 rounded-full border border-white/20 bg-white/5">Vue 3</span>
+          <span class="px-3 py-1 rounded-full border border-white/20 bg-white/5">ECharts</span>
+        </div>
       </div>
-      <div>
-        <h2 class="text-2xl mb-6">Литература</h2>
-        <ul>
-          <li>ААААААА</li>
-          <li>ААААААА</li>
-          <li>ААААААА</li>
-          <li>ААААААА</li>
+
+      <div class="space-y-3">
+        <h3 class="text-lg font-semibold">Команда</h3>
+        <div class="space-y-1 text-white/70">
+          <div>Дубовец А. С.</div>
+          <div>Дигрис А. В.</div>
+        </div>
+        <div class="text-sm text-white/60">
+          Контакты: <a class="underline-offset-2 hover:underline" href="mailto:team@analyzer.dev">team@analyzer.dev</a>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <h3 class="text-lg font-semibold">Литература</h3>
+        <ul class="space-y-1 text-white/70 text-sm">
+          <li>Lakowicz J.R. Principles of Fluorescence Spectroscopy</li>
+          <li>O'Connor D.V., Phillips D. Time-Correlated Single Photon Counting</li>
+          <li>Demchenko A.P. Introduction to Fluorescence Sensing</li>
+          <li>Valeur B. Molecular Fluorescence</li>
         </ul>
       </div>
     </div>
+
+    <div class="relative border-t border-white/10 px-10 py-4 text-xs text-white/50 flex justify-between max-w-7xl mx-auto">
+      <span>© {{ new Date().getFullYear() }} Analyzer</span>
+      <span>beta build</span>
+    </div>
   </footer>
 </template>
-
-<style scoped>
-.footer-background {
-  background: #83a4d4; /* fallback for old browsers */
-  background: -webkit-linear-gradient(45deg, #b6fbff, #83a4d4); /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(
-    270deg,
-    #b6fbff,
-    #83a4d4
-  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-}
-</style>
