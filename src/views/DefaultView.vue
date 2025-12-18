@@ -1,19 +1,11 @@
 <script setup lang="ts">
-// import { Button } from '@/components/ui/button'
-import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { ref, onBeforeMount, computed } from 'vue'
 import { ArrowRightIcon } from '@heroicons/vue/24/outline'
 
 import { getAllTasks } from '@/api/tasks'
-
 import type { Task } from '@/types/task'
-
 import StatusGauge from '@/components/primitives/StatusGauge.vue'
-
-// import type { AnalysisResult } from '@/types/analysis_result'
-// import type { CurveSet } from '@/types/curveSet'
-
-const router = useRouter()
 
 const tasks = ref<Task[] | null>(null)
 
@@ -21,240 +13,6 @@ onBeforeMount(async () => {
   const response = await getAllTasks()
   tasks.value = response.data.value
 })
-
-// const mockTasksWithResults: Task[] = [
-//   {
-//     id: 1,
-//     title: 'Baseline scan',
-//     created_at: '2025-11-06T08:15:00.000Z',
-//     processing_time: 127,
-//     // curve_set: {
-//     //   id: 3001,
-//     //   task_id: 1,
-//     //   description: 'Baseline curves (reference)',
-//     //   curves: [
-//     //     {
-//     //       id: 'c1',
-//     //       time_axis: [0, 1, 2, 3, 4, 5],
-//     //       raw: [0.01, 0.05, 0.11, 0.18, 0.26, 0.31],
-//     //       raw_scaled: [0.01, 0.05, 0.11, 0.18, 0.26, 0.31],
-//     //     },
-//     //     {
-//     //       id: 'c2',
-//     //       time_axis: [0, 1, 2, 3, 4, 5],
-//     //       raw: [0.0, 0.04, 0.09, 0.15, 0.22, 0.28],
-//     //       convolved: [0.0, 0.03, 0.08, 0.13, 0.19, 0.24],
-//     //     },
-//     //   ],
-//     // },
-//     analysis_results: {
-//       id: 7001,
-//       curve_set_id: 3001,
-//       dw_real: [0.12, 0.18, 0.26, 0.31],
-//       dw_imag: [-0.05, -0.09, -0.13, -0.16],
-//       coeff_v: 1.23,
-//       coeff_u: 0.87,
-//       tau1: 2.6,
-//       tau2: 11.4,
-//       a1_coeffs: [0.62, -0.14, 0.03],
-//       a2_coeffs: [0.48, 0.07, -0.01],
-//       omega: 6.283185307179586, // 2π*1
-//     },
-//   },
-//   {
-//     id: 2,
-//     title: 'Kinetics – sample A',
-//     created_at: '2025-11-06T08:45:12.000Z',
-//     processing_time: 312,
-//     // curve_set: {
-//     //   id: 3001, // тот же сет, что использовали в анализе
-//     //   task_id: 2,
-//     //   description: 'Kinetics curves (sample A)',
-//     //   curves: [
-//     //     {
-//     //       id: 'k1',
-//     //       time_axis: [0, 10, 20, 30, 40, 50, 60],
-//     //       noisy: [0.0, 0.07, 0.15, 0.22, 0.27, 0.31, 0.32],
-//     //       raw: [0.0, 0.06, 0.14, 0.21, 0.26, 0.3, 0.32],
-//     //     },
-//     //     {
-//     //       id: 'k2',
-//     //       time_axis: [0, 10, 20, 30, 40, 50, 60],
-//     //       raw_scaled: [0.01, 0.05, 0.1, 0.16, 0.21, 0.25, 0.28],
-//     //     },
-//     //   ],
-//     // },
-//     analysis_results: {
-//       id: 7002,
-//       curve_set_id: 3001,
-//       dw_real: [0.1, 0.15, 0.21, 0.27, 0.32],
-//       dw_imag: [-0.04, -0.08, -0.11, -0.15, -0.17],
-//       coeff_v: 1.11,
-//       coeff_u: 0.95,
-//       tau1: 3.1,
-//       tau2: 10.2,
-//       a1_coeffs: [0.55, -0.1, 0.02],
-//       a2_coeffs: [0.52, 0.05, -0.02],
-//       omega: 3.141592653589793, // π
-//     },
-//   },
-//   {
-//     id: 3,
-//     title: 'Selected wavelengths',
-//     created_at: '2025-11-06T09:02:30.000Z',
-//     processing_time: 165,
-//     // curve_set: {
-//     //   id: 3002,
-//     //   task_id: 3,
-//     //   description: 'Discrete wavelengths set',
-//     //   curves: [
-//     //     {
-//     //       id: 'λ450',
-//     //       time_axis: [0, 1, 2, 3],
-//     //       raw: [0.02, 0.08, 0.15, 0.22],
-//     //     },
-//     //     {
-//     //       id: 'λ520',
-//     //       time_axis: [0, 1, 2, 3],
-//     //       raw: [0.01, 0.07, 0.13, 0.19],
-//     //     },
-//     //   ],
-//     // },
-//     analysis_results: {
-//       id: 7003,
-//       curve_set_id: 3002,
-//       dw_real: [0.05, 0.09, 0.16, 0.22],
-//       dw_imag: [-0.02, -0.05, -0.09, -0.12],
-//       coeff_v: 1.34,
-//       coeff_u: 0.81,
-//       tau1: 1.9,
-//       tau2: 8.7,
-//       a1_coeffs: [0.6, -0.12, 0.01],
-//       a2_coeffs: [0.44, 0.09, -0.01],
-//       omega: 12.566370614359172, // 2π*2
-//     },
-//   },
-//   {
-//     id: 4,
-//     title: 'Reference – dark current',
-//     created_at: '2025-11-06T09:20:00.000Z',
-//     processing_time: 74,
-//     // curve_set: {
-//     //   id: 3003,
-//     //   task_id: 4,
-//     //   description: 'Dark current reference curves',
-//     //   curves: [
-//     //     {
-//     //       id: 'd1',
-//     //       time_axis: [0, 1, 2, 3, 4, 5],
-//     //       raw: [0.0, 0.01, 0.01, 0.02, 0.02, 0.03],
-//     //       convolved: [0.0, 0.01, 0.01, 0.02, 0.02, 0.02],
-//     //     },
-//     //   ],
-//     // },
-//     analysis_results: {
-//       id: 7004,
-//       curve_set_id: 3003,
-//       dw_real: [0.14, 0.21, 0.29, 0.35, 0.39, 0.42],
-//       dw_imag: [-0.06, -0.1, -0.14, -0.17, -0.19, -0.2],
-//       coeff_v: 1.05,
-//       coeff_u: 1.02,
-//       tau1: 4.2,
-//       tau2: 14.8,
-//       a1_coeffs: [0.7, -0.15, 0.04],
-//       a2_coeffs: [0.39, 0.11, -0.02],
-//       omega: 5.026548245743669, // 2π*0.8
-//     },
-//   },
-//   {
-//     id: 5,
-//     title: 'Spectrum – sample B',
-//     created_at: '2025-11-06T09:48:44.000Z',
-//     processing_time: 198,
-//     // curve_set: {
-//     //   id: 3004,
-//     //   task_id: 5,
-//     //   description: 'Full spectrum sweep (sample B)',
-//     //   curves: [
-//     //     {
-//     //       id: 111,
-//     //       time_axis: [400, 500, 600, 700],
-//     //       raw: [0.05, 0.18, 0.27, 0.3],
-//     //     },
-//     //     {
-//     //       id: 2222,
-//     //       time_axis: [400, 500, 600, 700],
-//     //       raw_scaled: [0.95, 0.82, 0.73, 0.7],
-//     //     },
-//     //   ],
-//     // },
-//     analysis_results: {
-//       id: 7005,
-//       curve_set_id: 3004,
-//       dw_real: [0.08, 0.13, 0.2, 0.26, 0.3],
-//       dw_imag: [-0.03, -0.07, -0.1, -0.13, -0.15],
-//       coeff_v: 1.18,
-//       coeff_u: 0.9,
-//       tau1: 2.2,
-//       tau2: 9.9,
-//       a1_coeffs: [0.58, -0.11, 0.02],
-//       a2_coeffs: [0.47, 0.06, -0.01],
-//       omega: 9.42477796076938, // 2π*1.5
-//     },
-//   },
-//   {
-//     id: 6,
-//     title: 'Calibration – 5 points',
-//     created_at: '2025-11-06T10:05:10.000Z',
-//     processing_time: 94,
-//     // curve_set: {
-//     //   id: 3005,
-//     //   task_id: 6,
-//     //   description: 'Five-point calibration series',
-//     //   curves: [
-//     //     {
-//     //       id: 'calA',
-//     //       time_axis: [0, 1, 2, 3],
-//     //       raw: [0.02, 0.08, 0.18, 0.3],
-//     //     },
-//     //     {
-//     //       id: 'calB',
-//     //       time_axis: [0, 1, 2, 3],
-//     //       raw: [0.01, 0.07, 0.16, 0.28],
-//     //     },
-//     //   ],
-//     // },
-//     analysis_results: {
-//       id: 7006,
-//       curve_set_id: 3005,
-//       dw_real: [0.11, 0.17, 0.24, 0.3],
-//       dw_imag: [-0.05, -0.09, -0.12, -0.16],
-//       coeff_v: 1.2,
-//       coeff_u: 0.92,
-//       tau1: 2.8,
-//       tau2: 12.1,
-//       a1_coeffs: [0.63, -0.13, 0.03],
-//       a2_coeffs: [0.46, 0.08, -0.02],
-//       omega: 7.539822368615503, // 2π*1.2
-//     },
-//   },
-// ]
-
-// const handleCreateTask = async () => {
-//   try {
-//     const response = await fetch('/api/tasks/create', {
-//       method: 'POST',
-//     }).then((res) => res.json())
-//     router.push({
-//       name: 'task-view',
-//       params: {
-//         id: response.id,
-//       },
-//     })
-//   } catch (err) {
-//     console.error(err)
-//   }
-// }
 
 const greeting = computed(() => {
   const currentDate = new Date()
@@ -267,142 +25,194 @@ const greeting = computed(() => {
     return 'Добрый вечер'
   }
 })
+
+const tasksTotal = computed(() => tasks.value?.length ?? 0)
+const tasksWithResults = computed(
+  () => tasks.value?.filter((task) => Boolean(task.analysis_results)).length ?? 0,
+)
 </script>
 
 <template>
-  <div class="size-full grid grid-cols-3 gap-10">
-    <div class="col-span-2 block-gradient p-8 space-y-20 relative rounded-lg overflow-hidden">
-      <div class="absolute top-0 -right-30 h-100 -rotate-15 opacity-20">
-        <img src="/Fluorescein.svg" class="object-fit size-full" />
-      </div>
-      <h2 class="text-4xl font-bold">{{ greeting }}</h2>
-      <div class="space-y-10">
-        <div class="text-2xl">С чего начнём?</div>
-        <div class="grid grid-cols-3 gap-5">
-          <RouterLink to="/create-task" class="group">
-            <div
-              class="relative min-h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white"
-            >
-              <h3 class="font-semibold">Создать новую задачу</h3>
-              <p class="text-black/40">Загрузите данные, запустите анализ и получите результат!</p>
-              <div class="text-gray-400 relative">
-                <ArrowRightIcon
-                  class="size-6 absolute group-hover:right-0 right-1/4 duration-200 opacity-0 group-hover:opacity-100"
-                />
-              </div>
-            </div>
-          </RouterLink>
-          <RouterLink to="/create-task" class="group">
-            <div
-              class="relative min-h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white"
-            >
-              <h3 class="font-semibold">Создать новую задачу</h3>
-              <p class="text-black/40">Загрузите данные, запустите анализ и получите результат!</p>
-              <div class="text-gray-400 relative">
-                <ArrowRightIcon
-                  class="size-6 absolute group-hover:right-0 right-1/4 duration-200 opacity-0 group-hover:opacity-100"
-                />
-              </div>
-            </div>
-          </RouterLink>
-          <RouterLink to="/create-task" class="group">
-            <div
-              class="relative min-h-40 backdrop-blur-2xl w-full bg-white/60 rounded-lg p-4 flex flex-col gap-5 group-hover:bg-white"
-            >
-              <h3 class="font-semibold">Создать новую задачу</h3>
-              <p class="text-black/40">Загрузите данные, запустите анализ и получите результат!</p>
-              <div class="text-gray-400 relative">
-                <ArrowRightIcon
-                  class="size-6 absolute group-hover:right-0 right-1/4 duration-200 opacity-0 group-hover:opacity-100"
-                />
-              </div>
-            </div>
-          </RouterLink>
-        </div>
-      </div>
-    </div>
-
-    <div class="block-gradient p-8 space-y-20 relative rounded-lg overflow-hidden row-span-2">
-      <h2 class="text-4xl font-bold">Недавние задачи</h2>
-      <div class="flex flex-col gap-4">
-        <RouterLink
-          to="https://google.com"
-          v-for="task in tasks?.slice(0, 6) || []"
-          :key="task.id"
-          class="group"
-        >
-          <div
-            class="w-full relative h-20 backdrop-blur-2xl bg-white/40 font-semibold rounded-lg p-4 flex gap-5 group-hover:bg-white/60 items-center border-l-8 border-l-[#1CA3B5]"
-          >
-            <div class="w-full">{{ task.title }}</div>
-            <div class="w-full text-gray-400 relative h-full flex items-center">
-              <ArrowRightIcon
-                class="size-6 absolute group-hover:right-0 right-1/4 duration-200 opacity-0 group-hover:opacity-100"
-              />
-            </div>
-          </div>
-        </RouterLink>
-      </div>
-    </div>
-
-    <div class="block-gradient p-8 relative rounded-lg overflow-hidden space-y-10"></div>
-    <div class="block-gradient p-8 space-y-20 relative rounded-lg overflow-hidden">
-      <!-- <h2 class="text-4xl font-bold">Состояние сервера</h2>
-      <div class="flex gap-4 justify-between w-full px-10">
-        <div class="flex flex-col justify-center">
-          <StatusGauge :value="50" />
-          <span class="mx-auto text-lg font-semibold">ЦП</span>
-        </div>
-        <div class="flex flex-col justify-center">
-          <StatusGauge :value="50" />
-          <span class="mx-auto text-lg font-semibold">ОЗУ</span>
-        </div>
-      </div> -->
-    </div>
-  </div>
-  <!-- <div class="w-2/3 mx-auto">
-    <h1 class="text-4xl font-semibold mb-16">Задачи</h1>
-    <div class="w-full grid grid-cols-5 gap-4">
-      <div v-for="task in mockTasksWithResults" :key="task.id">
-        <RouterLink :to="`/tasks/${task.id}`">
-          <div class="w-full h-80 flex flex-col border rounded-md border-gray-600">
-            <div class="h-2/3 bg-black/30"></div>
-            <div class="text-lg font-semibold px-2">{{ task.title }}</div>
-            <div class="text-gray-600 px-2 line-clamp-2 text-sm mt-5" v-if="task.analysis_results">
-              <div>
-                <div>
-                  <span>TAU1 = </span> <span>{{ task.analysis_results?.tau1 }}</span>
-                </div>
-                <div>
-                  <span>TAU2 = </span> <span>{{ task.analysis_results?.tau1 }}</span>
-                </div>
-              </div>
-              <span>See all...</span>
-            </div>
-          </div>
-        </RouterLink>
-      </div>
+  <div class="space-y-12">
+    <section
+      class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-900 via-cyan-700 to-sky-600 text-white shadow-xl"
+    >
       <div
-        class="size-32 border-dashed border-gray-500 border p-5 text-gray-500 cursor-pointer hover:border-black hover:text-black"
-        @click="handleCreateTask"
-      >
-        Создать задачу
+        class="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.12),_transparent_45%)] blur-3xl"
+      />
+      <div class="absolute -left-20 -bottom-32 size-96 rounded-full bg-white/10 blur-3xl" />
+      <div class="relative px-12 py-14 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div class="space-y-6">
+          <p class="text-sm uppercase tracking-[0.2em] text-white/70">{{ greeting }}</p>
+          <h1 class="text-5xl font-bold leading-tight">
+            Фазовый анализ кривых <span class="text-sky-200">в один клик</span>
+          </h1>
+          <p class="text-lg text-white/80">
+            Загружайте кривые затухания, запускайте расчёт и сравнивайте результаты — Analyzer
+            собирает кривые, коэффициенты и времена жизни на одном экране.
+          </p>
+          <div class="flex flex-wrap gap-4">
+            <RouterLink
+              to="/create-task"
+              class="inline-flex items-center gap-2 rounded-xl bg-white text-sky-900 px-5 py-3 text-sm font-semibold shadow-lg shadow-sky-900/40 hover:-translate-y-0.5 transition"
+            >
+              Начать новую задачу
+              <ArrowRightIcon class="size-5" />
+            </RouterLink>
+            <RouterLink
+              to="/tasks"
+              class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
+            >
+              История задач
+            </RouterLink>
+          </div>
+        </div>
+        <div
+          class="grid grid-cols-3 gap-8 bg-white/5 rounded-2xl border border-white/10 p-5 backdrop-blur"
+        >
+          <div class="stat-tile">
+            <div class="text-xs text-white/60">Всего задач</div>
+            <div class="text-4xl font-bold">{{ tasksTotal }}</div>
+            <div class="text-xs text-white/60">обработаны или в очереди</div>
+          </div>
+          <div class="stat-tile">
+            <div class="text-xs text-white/60">С готовыми результатами</div>
+            <div class="text-4xl font-bold text-emerald-200">{{ tasksWithResults }}</div>
+            <div class="text-xs text-white/60">коэффициенты и tau рассчитаны</div>
+          </div>
+          <div class="stat-tile">
+            <div class="text-xs text-white/60">API</div>
+            <div class="text-4xl font-bold">/api</div>
+            <div class="text-xs text-white/60">FastAPI · ECharts · Vue 3</div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="w-full flex justify-center">
-      <Button variant="default" @click="handleCreateTask"> Создать задачу </Button>
-    </div>
-  </div> -->
+    </section>
+
+    <section class="grid lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-8">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-sky-700 font-semibold">Шаги</p>
+              <h2 class="text-2xl font-bold">Как работает Analyzer</h2>
+            </div>
+            <RouterLink
+              to="/create-task"
+              class="inline-flex items-center gap-2 rounded-xl bg-sky-900 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-sky-800"
+            >
+              Создать задачу
+            </RouterLink>
+          </div>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="step-card">
+              <div class="step-index">1</div>
+              <h3 class="font-semibold">Загрузка кривых</h3>
+              <p class="text-sm text-gray-600">
+                Импортируйте экспериментальные данные: время, IRF и интенсивности.
+              </p>
+            </div>
+            <div class="step-card">
+              <div class="step-index">2</div>
+              <h3 class="font-semibold">Обработка</h3>
+              <p class="text-sm text-gray-600">
+                Analyzer строит фазоры, конволюции и нормализованные кривые для расчёта.
+              </p>
+            </div>
+            <div class="step-card">
+              <div class="step-index">3</div>
+              <h3 class="font-semibold">Результаты</h3>
+              <p class="text-sm text-gray-600">
+                Получите τ₁/τ₂, коэффициенты a₁/a₂ и графики для сравнения запусков.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div
+          class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-8 space-y-4"
+        >
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold">Недавние задачи</h2>
+            <RouterLink
+              to="/tasks"
+              class="text-sm font-semibold text-sky-900 border border-sky-200 px-3 py-1.5 rounded-lg hover:bg-sky-50"
+            >
+              Все задачи
+            </RouterLink>
+          </div>
+          <div class="space-y-3">
+            <RouterLink
+              v-for="task in tasks?.slice(0, 5) || []"
+              :key="task.id"
+              class="group"
+              :to="`/tasks/${task.id}`"
+            >
+              <div
+                class="w-full relative h-18 rounded-xl border border-slate-100 bg-white/70 font-semibold p-4 flex gap-5 group-hover:border-sky-200 group-hover:bg-sky-50 items-center"
+              >
+                <div class="w-full flex flex-col">
+                  <span class="text-slate-900">{{ task.title }}</span>
+                  <span class="text-xs text-slate-500">{{
+                    new Date(task.created_at).toLocaleString()
+                  }}</span>
+                </div>
+                <div class="text-gray-400 relative h-full flex items-center">
+                  <ArrowRightIcon
+                    class="size-5 absolute group-hover:right-0 right-1/4 duration-200 opacity-0 group-hover:opacity-100"
+                  />
+                </div>
+              </div>
+            </RouterLink>
+            <div v-if="!tasks?.length" class="text-sm text-gray-700">
+              Список пуст — создайте первую задачу, чтобы увидеть её здесь.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+          <h3 class="text-lg font-semibold mb-3">Мониторинг</h3>
+          <div class="flex gap-6 justify-between w-full">
+            <div class="flex flex-col items-center gap-2">
+              <StatusGauge :value="70" />
+              <span class="text-sm font-semibold text-slate-700">CPU</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <StatusGauge :value="55" />
+              <span class="text-sm font-semibold text-slate-700">RAM</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mt-4">Данные условные — подключите реальные метрики.</p>
+        </div>
+        <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+          <h3 class="text-lg font-semibold mb-3">Шаблоны запусков</h3>
+          <ul class="space-y-2 text-sm text-slate-700">
+            <li>• Базовый скан — быстрый прогон с шумом</li>
+            <li>• Полный спектр — несколько кривых с IRF</li>
+            <li>• Пользовательские данные — CSV/TSV загрузка</li>
+          </ul>
+          <RouterLink
+            to="/create-task"
+            class="mt-4 inline-flex items-center gap-2 rounded-lg border border-sky-200 px-3 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-50"
+          >
+            Открыть конструктор
+            <ArrowRightIcon class="size-4" />
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+  </div>
 </template>
 
-<style scoped>
-.block-gradient {
-  background: #83a4d4; /* fallback for old browsers */
-  background: -webkit-linear-gradient(180deg, #b6fbff, #83a4d4); /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(
-    98deg,
-    #b6fbff,
-    #83a4d4
-  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+<style scoped lang="postcss">
+.stat-tile {
+  @apply rounded-xl border border-white/10 bg-white/10 p-4 shadow-sm shadow-black/10;
+}
+.step-card {
+  @apply rounded-xl border border-slate-100 bg-white/80 p-5 shadow-sm shadow-slate-100;
+}
+.step-index {
+  @apply mb-3 size-8 rounded-full bg-sky-100 text-sky-900 text-sm font-bold flex items-center justify-center;
 }
 </style>
