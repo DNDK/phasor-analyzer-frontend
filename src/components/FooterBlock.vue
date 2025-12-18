@@ -7,7 +7,9 @@
     <div class="relative mx-auto max-w-7xl px-10 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
       <div class="space-y-4">
         <div class="flex items-center gap-3">
-          <div class="size-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center font-bold">
+          <div
+            class="size-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center font-bold"
+          >
             A
           </div>
           <div>
@@ -26,13 +28,16 @@
       </div>
 
       <div class="space-y-3">
-        <h3 class="text-lg font-semibold">Команда</h3>
+        <h3 class="text-lg font-semibold">Разработка</h3>
         <div class="space-y-1 text-white/70">
           <div>Дубовец А. С.</div>
           <div>Дигрис А. В.</div>
         </div>
         <div class="text-sm text-white/60">
-          Контакты: <a class="underline-offset-2 hover:underline" href="mailto:team@analyzer.dev">team@analyzer.dev</a>
+          Контакты:
+          <a class="underline-offset-2 hover:underline" href="mailto: rct.dubovecas@bsu.by"
+            >rct.dubovecas@bsu.by</a
+          >
         </div>
       </div>
 
@@ -47,7 +52,9 @@
       </div>
     </div>
 
-    <div class="relative border-t border-white/10 px-10 py-4 text-xs text-white/50 flex justify-between max-w-7xl mx-auto">
+    <div
+      class="relative border-t border-white/10 px-10 py-4 text-xs text-white/50 flex justify-between max-w-7xl mx-auto"
+    >
       <span>© {{ new Date().getFullYear() }} Analyzer</span>
       <span>beta build</span>
     </div>
