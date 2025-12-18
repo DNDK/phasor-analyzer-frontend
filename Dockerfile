@@ -1,5 +1,6 @@
 # Build stage
 FROM node:20-alpine AS build
+ENV NODE_OPTIONS=--max-old-space-size=4096
 WORKDIR /app
 
 COPY package*.json ./
