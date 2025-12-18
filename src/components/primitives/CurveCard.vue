@@ -51,7 +51,7 @@ const chartData = computed(() => {
         label: 'Convolved',
         backgroundColor: '#00D8FF',
         borderColor: '#00D8FF',
-        data: props.covolved,
+        data: props.convolved,
         tension: 0.4,
       },
       {
@@ -111,7 +111,7 @@ const chartOptions = {
   plugins: {
     legend: {
       display: true,
-      position: 'top',
+      position: 'top' as const,
     },
     tooltip: {
       enabled: true,

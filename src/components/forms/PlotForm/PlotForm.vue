@@ -64,12 +64,14 @@ const chartData = computed(() => (type: TPlotType) => {
   }
 })
 
-const chartOptions = {
+import type { ChartOptions } from 'chart.js'
+
+const chartOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   scales: {
     x: {
-      type: 'linear',
+      type: 'linear' as const,
       title: {
         display: true,
         text: 'Время, ед.',
@@ -84,7 +86,7 @@ const chartOptions = {
   },
   plugins: {
     legend: {
-      position: 'top' as const,
+      position: 'top',
       labels: {
         boxWidth: 12,
         padding: 16,

@@ -13,16 +13,17 @@ let chart: echarts.ECharts | null = null
 
 const buildOption = (uploaded?: TUploadedData | null): echarts.EChartsOption => {
   const curves = uploaded?.curves || []
-  const series =
+  const series: echarts.SeriesOption[] =
     curves
       .filter((c) => (c.time?.length ?? 0) && (c.intensity?.length ?? 0))
       .map((curve, idx) => {
         const length = Math.min(curve.time.length, curve.intensity.length)
-        const data = Array.from({ length }, (_, i) => [Number(curve.time[i]), Number(curve.intensity[i])]).filter(
-          ([t, y]) => Number.isFinite(t) && Number.isFinite(y),
-        )
+        const data = Array.from({ length }, (_, i) => [
+          Number(curve.time[i]),
+          Number(curve.intensity[i]),
+        ]).filter(([t, y]) => Number.isFinite(t) && Number.isFinite(y))
         return {
-          type: 'line',
+          type: 'line' as const,
           name: curve.name || `Кривая ${idx + 1}`,
           symbolSize: 3,
           showSymbol: false,

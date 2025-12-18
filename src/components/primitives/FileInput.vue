@@ -123,6 +123,8 @@ const handleGlobalDrop = (event: DragEvent) => {
   isDragging.value = false
 }
 
+const hasDocument = typeof document !== 'undefined'
+
 watch(
   uploadedData,
   (newValue) => {
@@ -233,7 +235,7 @@ onBeforeUnmount(() => {
       />
     </div>
 
-    <Teleport v-if="isDragging && typeof document !== 'undefined'" to="body">
+    <Teleport v-if="isDragging && hasDocument" to="body">
       <div class="fixed inset-0 bg-white/40 backdrop-blur-sm pointer-events-none z-20 transition" />
     </Teleport>
   </div>

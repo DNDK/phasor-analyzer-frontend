@@ -90,7 +90,14 @@ const aCoeffs = computed(() => {
   }))
 })
 
-const workflowSteps = computed(() => {
+type WorkflowStep = {
+  key: string
+  title: string
+  description: string
+  status: StepStatus
+}
+
+const workflowSteps = computed<WorkflowStep[]>(() => {
   const createTaskStatus: StepStatus = submitError.value
     ? 'error'
     : taskId.value
@@ -145,13 +152,10 @@ const workflowSteps = computed(() => {
 })
 
 const stepStatusByKey = computed<Record<string, StepStatus>>(() =>
-  workflowSteps.value.reduce(
-    (acc, step) => {
-      acc[step.key] = step.status
-      return acc
-    },
-    {} as Record<string, StepStatus>,
-  ),
+  workflowSteps.value.reduce((acc, step) => {
+    acc[step.key] = step.status
+    return acc
+  }, {} as Record<string, StepStatus>),
 )
 
 const runFullAnalysis = async () => {

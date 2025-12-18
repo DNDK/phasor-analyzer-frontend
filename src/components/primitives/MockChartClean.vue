@@ -76,7 +76,13 @@ const option: echarts.EChartsOption = {
       showSymbol: false,
       lineStyle: { width: 2 },
     },
-    { type: 'scatter', name: 'частоты', data: iqData, symbolSize: 4, opacity: 0.9 },
+    {
+      type: 'scatter',
+      name: 'частоты',
+      data: iqData,
+      symbolSize: 4,
+      itemStyle: { opacity: 0.9 },
+    },
   ],
 }
 
