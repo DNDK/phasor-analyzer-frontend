@@ -86,10 +86,12 @@ const chartOptions: ChartOptions<'line'> = {
   },
   plugins: {
     legend: {
-      position: 'top',
+      position: 'right',
+      align: 'start',
       labels: {
         boxWidth: 12,
-        padding: 16,
+        padding: 12,
+        usePointStyle: true,
       },
     },
   },

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowUpTrayIcon, ArrowRightIcon } from '@heroicons/vue/24/outline'
+import { ArrowUpTrayIcon, ArrowRightIcon, PencilIcon } from '@heroicons/vue/24/outline'
 import { computed, ref } from 'vue'
 
 import MockChart from '@/components/primitives/MockChart.vue'
@@ -25,6 +25,8 @@ const props = defineProps<{
   mode: 'view' | 'create'
   task?: Task
 }>()
+
+const taskTitle = ref<string>('')
 
 const dataInput = ref<TUploadedData>({ curves: [], irf: [] })
 
@@ -176,7 +178,7 @@ const runFullAnalysis = async () => {
 
   isSubmitting.value = true
   try {
-    const taskResponse = await createTask()
+    const taskResponse = await createTask(taskTitle.value)
     if (taskResponse.error.value) {
       throw new Error('Не удалось создать задачу')
     }
@@ -228,9 +230,20 @@ const runFullAnalysis = async () => {
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p class="text-xs uppercase tracking-[0.2em] text-white/70">Конструктор</p>
-            <h1 class="text-4xl font-bold leading-tight">
+            <!-- <h1 class="text-4xl font-bold leading-tight">
               {{ props.mode === 'view' ? props.task?.title : 'Новая задача' }}
-            </h1>
+            </h1> -->
+
+            <div class="group flex items-center gap-3 mt-3">
+              <input
+                class="text-4xl font-bold leading-tight ring-0 outline-0 border border-transparent group-hover:border-white box-content px-2 py-1 rounded-2xl flex transition-all duration-200"
+                placeholder="Новая задача"
+                v-model="taskTitle"
+              />
+              <PencilIcon
+                class="size-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              />
+            </div>
           </div>
           <div class="flex flex-wrap gap-2">
             <div
@@ -300,10 +313,12 @@ const runFullAnalysis = async () => {
           — они попадут в легенду графика.
         </p>
       </div>
-      <div
-        class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6"
-      >
-        <FileInput v-model="dataInput" class="h-full" />
+      <div class="lg:col-span-2">
+        <!-- rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 -->
+        <FileInput
+          v-model="dataInput"
+          class="h-full min-h-48 shadow-lg rounded-2xl border-slate-300 border"
+        />
       </div>
     </section>
 
