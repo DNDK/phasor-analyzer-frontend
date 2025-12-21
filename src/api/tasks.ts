@@ -12,7 +12,11 @@ export async function getAllTasks() {
   return { data, error, isFetching }
 }
 
-export async function createTask() {
-  const { data, error, isFetching } = await useFetch<Task>(`/api/tasks/create`).post().json<Task>()
+export async function createTask(title?: string) {
+  const { data, error, isFetching } = await useFetch<Task>(`/api/tasks/create`)
+    .post({
+      title: title && title?.length ? title : undefined,
+    })
+    .json<Task>()
   return { data, error, isFetching }
 }
