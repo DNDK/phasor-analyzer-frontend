@@ -74,8 +74,7 @@ const inputValidationMessage = computed<string | null>(() => {
       return `Кривая ${idx + 1}: некорректные значения интенсивности`
   }
   if (!irf.length) return 'IRF отсутствует в файле'
-  if (curves[0]?.time?.length !== irf.length)
-    return 'Длина IRF не совпадает с временной осью'
+  if (curves[0]?.time?.length !== irf.length) return 'Длина IRF не совпадает с временной осью'
   if (irf.some((v) => !Number.isFinite(v))) return 'Некорректные значения IRF'
 
   return null
@@ -154,10 +153,13 @@ const workflowSteps = computed<WorkflowStep[]>(() => {
 })
 
 const stepStatusByKey = computed<Record<string, StepStatus>>(() =>
-  workflowSteps.value.reduce((acc, step) => {
-    acc[step.key] = step.status
-    return acc
-  }, {} as Record<string, StepStatus>),
+  workflowSteps.value.reduce(
+    (acc, step) => {
+      acc[step.key] = step.status
+      return acc
+    },
+    {} as Record<string, StepStatus>,
+  ),
 )
 
 const runFullAnalysis = async () => {
@@ -278,7 +280,9 @@ const runFullAnalysis = async () => {
     </section>
 
     <section class="grid lg:grid-cols-3 gap-6">
-      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+      <div
+        class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 max-h-fit"
+      >
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-lg text-slate-900">Исходные данные</h3>
           <span
@@ -291,19 +295,22 @@ const runFullAnalysis = async () => {
         <p class="text-slate-700 text-sm leading-6">
           Набор экспериментальных данных — временная зависимость интенсивности флюоресценции.
           Используйте файл с колонками: время, IRF, далее интенсивности кривых (t | irf | I₁ | I₂
-          ...). Имена кривых можно задать первой строкой вида: <code># names: curve A; curve B;</code>
+          ...). Имена кривых можно задать первой строкой вида:
+          <code># names: curve A; curve B;</code>
           — они попадут в легенду графика.
         </p>
       </div>
       <div
         class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6"
       >
-        <FileInput v-model="dataInput" />
+        <FileInput v-model="dataInput" class="h-full" />
       </div>
     </section>
 
     <section class="grid lg:grid-cols-3 gap-6">
-      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+      <div
+        class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 max-h-fit"
+      >
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-lg text-slate-900">Визуализация исходных данных</h3>
           <span class="text-xs text-slate-500">После загрузки</span>
@@ -320,7 +327,9 @@ const runFullAnalysis = async () => {
     </section>
 
     <section class="grid lg:grid-cols-3 gap-6">
-      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+      <div
+        class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 max-h-fit"
+      >
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-lg text-slate-900">Данные после обработки</h3>
           <span
@@ -364,7 +373,9 @@ const runFullAnalysis = async () => {
     </section>
 
     <section class="grid lg:grid-cols-3 gap-6">
-      <div class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6">
+      <div
+        class="rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 max-h-fit"
+      >
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-lg text-slate-900">Результаты анализа</h3>
           <span
@@ -383,9 +394,7 @@ const runFullAnalysis = async () => {
         class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 space-y-4"
       >
         <div class="font-semibold flex items-center gap-2 text-slate-900">
-          <span>
-            Результаты анализа кривых затухания методом фазовых векторов
-          </span>
+          <span> Результаты анализа кривых затухания методом фазовых векторов </span>
           <span v-if="taskId" class="text-xs text-slate-500">(task #{{ taskId }})</span>
         </div>
         <div v-if="submitError" class="text-red-600 text-sm">{{ submitError }}</div>

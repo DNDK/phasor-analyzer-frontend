@@ -91,7 +91,7 @@ const tasksWithResults = computed(
               <div class="step-index">2</div>
               <h3 class="font-semibold">Обработка</h3>
               <p class="text-sm text-gray-600">
-                Analyzer строит фазоры, конволюции и нормализованные кривые для расчёта.
+                Analyzer проводит полный цикл анализа методом фазовых векторов.
               </p>
             </div>
             <div class="step-card">
