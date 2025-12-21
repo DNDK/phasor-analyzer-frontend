@@ -3,11 +3,11 @@ import { ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { TUploadedData, TCurve } from './types/uploadedData'
 
-const modelValue = defineModel<TUploadedData>({ default: () => ({ curves: [] }) })
+const modelValue = defineModel<TUploadedData>({ default: () => ({ curves: [], irf: [] }) })
 
 // const modelValue = defineModel()
 const fileInput = ref<HTMLInputElement>()
-const uploadedData = ref<TUploadedData>(modelValue.value || { curves: [] })
+const uploadedData = ref<TUploadedData>(modelValue.value || { curves: [], irf: [] })
 
 const fileName = ref<string>('')
 
@@ -17,16 +17,32 @@ const dragDepth = ref(0)
 
 const parseCurveSet = (text: string) => {
   // Expected format for phasor workflow with IRF:
+  // (optional) # names: curve A, curve B, curve C
   // time  irf  intensity_curve1  intensity_curve2 ...
   // (whitespace / CSV / semicolon separated)
-  const lines = text
+  const names: string[] = []
+  const irf: number[] = []
+  const dataLines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-  if (!lines.length) throw new Error('Файл пустой')
+    .filter((line) => {
+      const metaMatch = line.match(/^#\s*names?\s*[:=]\s*(.+)$/i)
+      if (metaMatch?.[1]) {
+        names.push(
+          ...metaMatch[1]
+            .split(/[;,]+/)
+            .map((n) => n.trim())
+            .filter(Boolean),
+        )
+        return false
+      }
+      return !/^#/.test(line) && !/^\/\//.test(line)
+    })
+  if (!dataLines.length) throw new Error('Файл пустой')
 
   const curves: TCurve[] = []
-  lines.forEach((line, lineIdx) => {
+  dataLines.forEach((line, lineIdx) => {
     const parts = line.split(/[\s,;]+/).filter(Boolean)
     if (parts.length < 3) {
       throw new Error(`Строка ${lineIdx + 1}: минимум 3 колонки (time, irf, intensity...)`)
@@ -37,9 +53,16 @@ const parseCurveSet = (text: string) => {
     }
 
     const [time, irfValue, ...intensities] = numbers
+    irf.push(irfValue)
+    if (names.length && names.length !== intensities.length) {
+      throw new Error(
+        `Строка ${lineIdx + 1}: количество имён (${names.length}) не совпадает с числом кривых (${intensities.length})`,
+      )
+    }
     if (!curves.length) {
       intensities.forEach((_, idx) => {
-        curves.push({ name: `Кривая ${idx + 1}`, time: [], intensity: [], irf: [] })
+        const name = names[idx] || `Кривая ${idx + 1}`
+        curves.push({ name, time: [], intensity: [] })
       })
     } else if (curves.length !== intensities.length) {
       throw new Error(
@@ -50,13 +73,12 @@ const parseCurveSet = (text: string) => {
     intensities.forEach((intens, idx) => {
       curves[idx].time.push(time)
       curves[idx].intensity.push(intens)
-      curves[idx].irf.push(irfValue)
     })
   })
 
   if (!curves.length) throw new Error('Не удалось создать набор кривых')
 
-  uploadedData.value = { curves }
+  uploadedData.value = { curves, irf }
 }
 
 const readFile = (file: File) => {
@@ -189,7 +211,7 @@ onBeforeUnmount(() => {
           <div class="font-semibold text-black">
             Загружено кривых: {{ uploadedData.curves.length }}
           </div>
-          <div class="text-xs text-gray-700">Формат: t | irf | I₁ | I₂ ...</div>
+          <div class="text-xs text-gray-700">Формат: # names: ... (опц.) + t | irf | I₁ | I₂ ...</div>
         </div>
         <div
           class="grid grid-cols-[80px_80px_repeat(3,minmax(100px,1fr))] gap-2 py-4 w-full px-4 fade-bottom-mask"
@@ -208,7 +230,7 @@ onBeforeUnmount(() => {
             :key="rowIdx"
           >
             <span class="text-center">{{ uploadedData.curves[0]?.time[rowIdx - 1] }}</span>
-            <span class="text-center">{{ uploadedData.curves[0]?.irf[rowIdx - 1] }}</span>
+            <span class="text-center">{{ uploadedData.irf?.[rowIdx - 1] }}</span>
             <span
               v-for="curve in uploadedData.curves.slice(0, 3)"
               :key="`${curve.name}-${rowIdx}`"

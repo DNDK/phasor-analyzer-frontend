@@ -32,7 +32,7 @@ const buildOption = (uploaded?: TUploadedData | null): echarts.EChartsOption => 
       }) || []
 
   return {
-    grid: { left: 50, right: 20, top: 20, bottom: 50, containLabel: true },
+    grid: { left: 50, right: 170, top: 20, bottom: 50, containLabel: true },
     tooltip: { trigger: 'axis' },
     xAxis: {
       type: 'value',
@@ -48,7 +48,20 @@ const buildOption = (uploaded?: TUploadedData | null): echarts.EChartsOption => 
       min: series.length ? 'dataMin' : 0,
       max: series.length ? 'dataMax' : 1,
     },
-    legend: { show: series.length > 1 },
+    legend: series.length
+      ? {
+          type: 'scroll',
+          orient: 'vertical',
+          right: 10,
+          top: 10,
+          bottom: 10,
+          width: 140,
+          itemWidth: 12,
+          itemHeight: 8,
+          icon: 'roundRect',
+          data: series.map((curve) => String(curve.name)),
+        }
+      : undefined,
     series,
   }
 }

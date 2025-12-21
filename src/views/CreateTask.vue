@@ -3,7 +3,7 @@ import { ArrowUpTrayIcon, ArrowRightIcon } from '@heroicons/vue/24/outline'
 import { computed, ref } from 'vue'
 
 import MockChart from '@/components/primitives/MockChart.vue'
-import MockChartClean from '@/components/primitives/MockChartClean.vue'
+import PhasorPlot from '@/components/primitives/PhasorPlot.vue'
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ const props = defineProps<{
   task?: Task
 }>()
 
-const dataInput = ref<TUploadedData>({ curves: [] })
+const dataInput = ref<TUploadedData>({ curves: [], irf: [] })
 
 const analysisResult = ref<AnalysisResult | null>(null)
 const taskId = ref<number | null>(null)
@@ -61,20 +61,22 @@ const inputValidationMessage = computed<string | null>(() => {
   console.log(dataInput.value)
   const curves = dataInput.value?.curves || []
   if (!curves.length) return 'Загрузите файл с кривыми (формат: t | irf | I₁ | I₂ ...)'
+  const irf = dataInput.value?.irf || []
 
   for (const [idx, c] of curves.entries()) {
     const len = c.time?.length ?? 0
     if (!len) return `Кривая ${idx + 1}: нет точек`
     if ((c.intensity?.length ?? 0) !== len)
       return `Кривая ${idx + 1}: длина intensity не совпадает с time`
-    if ((c.irf?.length ?? 0) !== len) return `Кривая ${idx + 1}: длина IRF не совпадает с time`
     if (c.time.some((v) => !Number.isFinite(v)))
       return `Кривая ${idx + 1}: некорректные значения времени`
     if (c.intensity.some((v) => !Number.isFinite(v)))
       return `Кривая ${idx + 1}: некорректные значения интенсивности`
-    if (c.irf.some((v) => !Number.isFinite(v)))
-      return `Кривая ${idx + 1}: некорректные значения IRF`
   }
+  if (!irf.length) return 'IRF отсутствует в файле'
+  if (curves[0]?.time?.length !== irf.length)
+    return 'Длина IRF не совпадает с временной осью'
+  if (irf.some((v) => !Number.isFinite(v))) return 'Некорректные значения IRF'
 
   return null
 })
@@ -185,10 +187,10 @@ const runFullAnalysis = async () => {
     const uploadPayload = {
       task_id: createdTask.id,
       description: 'User uploaded dataset',
+      irf: dataInput.value.irf,
       curves: dataInput.value.curves.map((curve) => ({
         time_axis: curve.time,
         intensity: curve.intensity,
-        irf: curve.irf,
       })),
     }
     const uploadResponse = await uploadCurveSetFromData(uploadPayload)
@@ -289,7 +291,8 @@ const runFullAnalysis = async () => {
         <p class="text-slate-700 text-sm leading-6">
           Набор экспериментальных данных — временная зависимость интенсивности флюоресценции.
           Используйте файл с колонками: время, IRF, далее интенсивности кривых (t | irf | I₁ | I₂
-          ...).
+          ...). Имена кривых можно задать первой строкой вида: <code># names: curve A; curve B;</code>
+          — они попадут в легенду графика.
         </p>
       </div>
       <div
@@ -339,9 +342,24 @@ const runFullAnalysis = async () => {
           v-if="!analysisStarted"
           class="absolute inset-0 flex items-center justify-center text-sm text-slate-600"
         >
-          Запустите анализ, чтобы увидеть обработанные данные
+          Запустите анализ, чтобы увидеть фазорный график
         </div>
-        <MockChartClean v-else />
+        <div v-else class="w-full h-full">
+          <div
+            v-if="!analysisResult"
+            class="absolute inset-0 flex items-center justify-center text-sm text-slate-600"
+          >
+            Ожидаем результаты анализа...
+          </div>
+          <PhasorPlot
+            v-else
+            :dw-real="analysisResult.dw_real"
+            :dw-imag="analysisResult.dw_imag"
+            :omega="analysisResult.omega"
+            :coeff-u="analysisResult.coeff_u"
+            :coeff-v="analysisResult.coeff_v"
+          />
+        </div>
       </div>
     </section>
 

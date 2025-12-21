@@ -5,10 +5,10 @@ import type { CurveSet } from '@/types/curveSet'
 type UploadCurveSetPayload = {
   task_id: number
   description?: string
+  irf: number[]
   curves: Array<{
     time_axis: number[]
     intensity: number[]
-    irf?: number[]
   }>
 }
 

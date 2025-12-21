@@ -6,12 +6,16 @@ type Props = {
   dwReal?: number[] | null
   dwImag?: number[] | null
   omega?: number | null
+  coeffU?: number | null
+  coeffV?: number | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   dwReal: () => [],
   dwImag: () => [],
   omega: null,
+  coeffU: null,
+  coeffV: null,
 })
 
 const el = ref<HTMLDivElement | null>(null)
@@ -58,6 +62,69 @@ const fitLine = computed(() => {
   ]
 })
 
+const backendLine = computed(() => {
+  // Backend returns v, u from lstsq(A, y) where y ~ v * x + u
+  const m = props.coeffV
+  const c = props.coeffU
+  if (m === null || m === undefined || c === null || c === undefined) return null
+  const pts = points.value
+  const xs = pts.length ? pts.map(([x]) => x) : [0, 1]
+  const minX = Math.min(...xs, 0)
+  const maxX = Math.max(...xs, 1)
+  const span = Math.max(0.4, maxX - minX || 0.4)
+  const start = minX - span * 0.25
+  const end = maxX + span * 0.25
+  return [
+    [start, m * start + c],
+    [end, m * end + c],
+  ]
+})
+
+const lineForDisplay = computed(() => backendLine.value || fitLine.value)
+
+const lineParams = computed(() => {
+  if (
+    props.coeffU !== null &&
+    props.coeffU !== undefined &&
+    props.coeffV !== null &&
+    props.coeffV !== undefined
+  ) {
+    // Backend: y = v * x + u
+    return { m: props.coeffV, c: props.coeffU }
+  }
+  const line = fitLine.value
+  if (!line?.length) return null
+  const [[x1, y1], [x2, y2]] = line
+  const dx = x2 - x1
+  if (Math.abs(dx) < 1e-8) return null
+  const m = (y2 - y1) / dx
+  const c = y1 - m * x1
+  return { m, c }
+})
+
+const intersections = computed<[number, number][]>(() => {
+  const params = lineParams.value
+  if (!params) return []
+  const { m, c } = params
+  // (x-0.5)^2 + y^2 = 0.25  => x^2 - x + y^2 = 0
+  // y = m x + c
+  const A = 1 + m * m
+  const B = 2 * m * c - 1
+  const C = c * c
+  const D = B * B - 4 * A * C
+  if (D < 0) return []
+  const sqrtD = Math.sqrt(D)
+  const xRoot1 = (-B + sqrtD) / (2 * A)
+  const xRoot2 = (-B - sqrtD) / (2 * A)
+  const roots = [xRoot1, xRoot2]
+  const result: [number, number][] = []
+  for (const xr of roots) {
+    const yr = m * xr + c
+    if (yr >= -0.01) result.push([xr, yr])
+  }
+  return result
+})
+
 const semicircle = computed(() => {
   const centerX = 0.5
   const centerY = 0
@@ -73,6 +140,23 @@ const semicircle = computed(() => {
 
 const option = computed<echarts.EChartsOption>(() => {
   const hasData = points.value.length > 0
+  const xs = [
+    ...semicircle.value.map(([x]) => x),
+    ...points.value.map(([x]) => x),
+    ...intersections.value.map(([x]) => x),
+  ]
+  const ys = [
+    ...semicircle.value.map(([, y]) => y),
+    ...points.value.map(([, y]) => y),
+    ...intersections.value.map(([, y]) => y),
+  ]
+  const snap = (v: number, step = 0.05) => Math.round(v / step) * step
+  const niceFloor = (v: number, step = 0.05) => snap(Math.floor(v / step) * step, step)
+  const niceCeil = (v: number, step = 0.05) => snap(Math.ceil(v / step) * step, step)
+
+  const xMin = niceFloor(Math.min(...xs, -0.2) - 0.05, 0.05)
+  const xMax = niceCeil(Math.max(...xs, 1.4) + 0.05, 0.05)
+  const yMax = niceCeil(Math.max(...ys, 0.9) + 0.05, 0.05)
   return {
     grid: { left: 70, right: 30, top: 30, bottom: 60, containLabel: true },
     tooltip: {
@@ -88,20 +172,26 @@ const option = computed<echarts.EChartsOption>(() => {
     xAxis: {
       type: 'value',
       name: 'Re(D)',
-      min: -0.2,
-      max: 1.4,
+      min: xMin,
+      max: xMax,
       nameLocation: 'middle',
       nameGap: 35,
-      axisLabel: { hideOverlap: true },
+      axisLabel: {
+        hideOverlap: true,
+        formatter: (val: number) => Number(val).toFixed(2),
+      },
     },
     yAxis: {
       type: 'value',
       name: 'Im(D)',
       min: 0,
-      max: 0.9,
+      max: yMax,
       nameLocation: 'middle',
       nameGap: 45,
-      axisLabel: { hideOverlap: true },
+      axisLabel: {
+        hideOverlap: true,
+        formatter: (val: number) => Number(val).toFixed(2),
+      },
     },
     series: [
       {
@@ -116,8 +206,8 @@ const option = computed<echarts.EChartsOption>(() => {
       hasData
         ? {
             type: 'line',
-            name: 'Линейная аппроксимация',
-            data: fitLine.value,
+            name: backendLine.value ? 'Линия (backend u/v)' : 'Линейная аппроксимация',
+            data: lineForDisplay.value,
             showSymbol: false,
             lineStyle: { type: 'dashed', width: 1.5, color: '#0ea5e9' },
           }
@@ -129,6 +219,19 @@ const option = computed<echarts.EChartsOption>(() => {
             data: points.value,
             symbolSize: 8,
             itemStyle: { color: '#2563eb' },
+          }
+        : null,
+      intersections.value.length
+        ? {
+            type: 'scatter',
+            name: 'Точки пересечения',
+            data: intersections.value,
+            symbolSize: 10,
+            itemStyle: { color: '#10b981' },
+            tooltip: {
+              formatter: (p: any) =>
+                `Пересечение<br/>Re: ${p.value[0].toFixed(4)}<br/>Im: ${p.value[1].toFixed(4)}`,
+            },
           }
         : null,
     ].filter(Boolean) as echarts.SeriesOption[],
