@@ -180,6 +180,13 @@ onBeforeUnmount(() => {
   window.removeEventListener('dragend', handleDragLeave)
   window.removeEventListener('drop', handleGlobalDrop)
 })
+
+const formatValue = (value?: number | null) => {
+  if (value === null || value === undefined || Number.isNaN(value)) return ''
+  const abs = Math.abs(value)
+  if (abs !== 0 && (abs < 1e-3 || abs > 1e4)) return value.toExponential(3)
+  return value.toFixed(3)
+}
 </script>
 
 <template>
@@ -229,14 +236,18 @@ onBeforeUnmount(() => {
             v-for="rowIdx in Math.min(8, uploadedData.curves[0]?.time.length || 0)"
             :key="rowIdx"
           >
-            <span class="text-center">{{ uploadedData.curves[0]?.time[rowIdx - 1] }}</span>
-            <span class="text-center">{{ uploadedData.irf?.[rowIdx - 1] }}</span>
+            <span class="text-center">
+              {{ formatValue(uploadedData.curves[0]?.time[rowIdx - 1]) }}
+            </span>
+            <span class="text-center">
+              {{ formatValue(uploadedData.irf?.[rowIdx - 1]) }}
+            </span>
             <span
               v-for="curve in uploadedData.curves.slice(0, 3)"
               :key="`${curve.name}-${rowIdx}`"
               class="text-center"
             >
-              {{ curve.intensity[rowIdx - 1] }}
+              {{ formatValue(curve.intensity[rowIdx - 1]) }}
             </span>
           </template>
         </div>
