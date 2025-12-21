@@ -5,7 +5,7 @@ import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import type { TUploadedData } from './types/uploadedData'
 
 const props = withDefaults(defineProps<{ data?: TUploadedData | null }>(), {
-  data: () => ({ curves: [] }),
+  data: () => ({ curves: [], irf: [] }),
 })
 
 const chartEl = ref<HTMLDivElement | null>(null)
