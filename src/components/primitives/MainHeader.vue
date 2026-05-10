@@ -1,5 +1,14 @@
 <script lang="ts" setup>
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const logout = () => {
+  auth.clearTokens()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -22,7 +31,7 @@ import { RouterLink } from 'vue-router'
         </RouterLink>
         <nav class="flex items-center gap-4 text-sm font-semibold text-slate-700">
           <RouterLink class="nav-link" to="/create-task">Создать задачу</RouterLink>
-          <RouterLink class="nav-link" to="/tasks">История</RouterLink>
+          <RouterLink class="nav-link" to="/curve-sets">История</RouterLink>
           <RouterLink class="nav-link" to="/">Главная</RouterLink>
         </nav>
         <div class="hidden md:flex items-center gap-3">
@@ -32,6 +41,12 @@ import { RouterLink } from 'vue-router'
           >
             FastAPI · Vue 3
           </span>
+          <button
+            class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition"
+            @click="logout"
+          >
+            Выйти
+          </button>
         </div>
       </div>
     </div>

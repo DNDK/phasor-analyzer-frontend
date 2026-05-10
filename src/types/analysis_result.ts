@@ -1,15 +1,17 @@
 interface AnalysisResult {
   id: number
   curve_set_id: number
-  dw_real: number[]
-  dw_imag: number[]
-  coeff_v: number
-  coeff_u: number
-  tau1: number
-  tau2: number
-  a1_coeffs: number[]
-  a2_coeffs: number[]
-  omega: number
+  processing_time: number | null
+  created_at: string
+  dw_real: (number | null)[]
+  dw_imag: (number | null)[]
+  coeff_v: number | null
+  coeff_u: number | null
+  tau1: number | null
+  tau2: number | null
+  a1_coeffs: (number | null)[]
+  a2_coeffs: (number | null)[]
+  omega: number | null
 }
 
 export type { AnalysisResult }

@@ -14,50 +14,64 @@ import { LineChart } from 'echarts/charts'
 
 import { ArrowRightIcon, ArrowPathIcon, ChartBarIcon } from '@heroicons/vue/24/outline'
 
-import { getTask } from '@/api/tasks'
-import { getAnalysis } from '@/api/analysis'
-import type { Task } from '@/types/task'
+import { getCurveSet } from '@/api/curveSets'
+import { startAnalysis, getAnalysisByCurveSet } from '@/api/analysis'
+import type { CurveSet } from '@/types/curveSet'
 import type { Curve } from '@/types/curve'
 import type { AnalysisResult } from '@/types/analysis_result'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ApiError } from '@/api/client'
 
 use([TitleComponent, TooltipComponent, LegendComponent, CanvasRenderer, LineChart, GridComponent])
 
 const route = useRoute()
 
-const task = ref<Task | null>(null)
+const curveSet = ref<CurveSet | null>(null)
 const analysisResult = ref<AnalysisResult | null>(null)
 const isLoading = ref(true)
+const isRunningAnalysis = ref(false)
 const errorMessage = ref<string | null>(null)
+const analysisError = ref<string | null>(null)
 
-const fetchTask = async () => {
+const fetchCurveSet = async () => {
   isLoading.value = true
   errorMessage.value = null
   try {
-    const { data, error } = await getTask(route.params.id)
-    if (error.value) throw new Error('Не удалось загрузить задачу')
-    task.value = data.value ?? null
-    analysisResult.value = task.value?.analysis_results ?? null
-
-    if (!analysisResult.value && task.value?.analysis_results_id) {
-      const { data: resData, error: resError } = await getAnalysis(task.value.analysis_results_id)
-      if (!resError.value) analysisResult.value = resData.value ?? null
+    const id = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
+    curveSet.value = await getCurveSet(id)
+    // If the analysis has already been run, fetch its result automatically
+    if (curveSet.value.status === 'completed') {
+      analysisResult.value = await getAnalysisByCurveSet(id)
     }
   } catch (e: any) {
-    errorMessage.value = e?.message || 'Ошибка при загрузке задачи'
-    task.value = null
-    analysisResult.value = null
+    errorMessage.value = e instanceof ApiError ? e.message : 'Ошибка при загрузке набора кривых'
+    curveSet.value = null
   } finally {
     isLoading.value = false
   }
 }
 
-onBeforeMount(fetchTask)
+const runAnalysis = async () => {
+  if (!curveSet.value) return
+  isRunningAnalysis.value = true
+  analysisError.value = null
+  try {
+    analysisResult.value = await startAnalysis(curveSet.value.id)
+    // Refresh the curve set to get the updated status
+    curveSet.value = await getCurveSet(curveSet.value.id)
+  } catch (e: any) {
+    analysisError.value = e instanceof ApiError ? e.message : 'Не удалось запустить анализ'
+  } finally {
+    isRunningAnalysis.value = false
+  }
+}
+
+onBeforeMount(fetchCurveSet)
 
 const formattedDate = computed(() => {
-  if (!task.value?.created_at) return ''
-  const date = new Date(task.value.created_at)
-  if (isNaN(date.getTime())) return task.value.created_at
+  if (!curveSet.value?.created_at) return ''
+  const date = new Date(curveSet.value.created_at)
+  if (isNaN(date.getTime())) return curveSet.value.created_at
   return date
     .toLocaleString('ru-RU', {
       day: '2-digit',
@@ -69,7 +83,7 @@ const formattedDate = computed(() => {
     .replace(',', '')
 })
 
-const getPriorityData = (curve: Curve) =>
+const getPriorityData = (curve: Curve): number[] =>
   curve.noisy ??
   curve.convolved ??
   curve.raw_scaled ??
@@ -82,8 +96,8 @@ const generateColor = (index: number, total: number) => {
 }
 
 const echartOptions = computed(() => {
-  if (!task.value?.curve_set?.curves?.length) return {}
-  const curves = task.value.curve_set.curves
+  if (!curveSet.value?.curves?.length) return {}
+  const curves = curveSet.value.curves
   return {
     tooltip: {
       trigger: 'axis',
@@ -123,15 +137,21 @@ const aCoeffs = computed(() => {
   }))
 })
 
-const statusLabel = computed(() =>
-  analysisResult.value ? 'Анализ завершён' : 'Ожидает анализа',
-)
+const statusLabel = computed(() => {
+  const st = curveSet.value?.status
+  if (st === 'completed') return 'Анализ завершён'
+  if (st === 'running') return 'Выполняется'
+  if (st === 'failed') return 'Ошибка'
+  return 'Ожидает анализа'
+})
 
-const statusClass = computed(() =>
-  analysisResult.value
-    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-    : 'bg-amber-50 text-amber-700 border-amber-100',
-)
+const statusClass = computed(() => {
+  const st = curveSet.value?.status
+  if (st === 'completed') return 'bg-emerald-50 text-emerald-700 border-emerald-100'
+  if (st === 'failed') return 'bg-red-50 text-red-700 border-red-100'
+  if (st === 'running') return 'bg-sky-50 text-sky-700 border-sky-100'
+  return 'bg-amber-50 text-amber-700 border-amber-100'
+})
 </script>
 
 <template>
@@ -148,13 +168,13 @@ const statusClass = computed(() =>
           <div>
             <p class="text-xs uppercase tracking-[0.2em] text-white/70">Задача</p>
             <h1 class="text-4xl font-bold leading-tight">
-              {{ task?.title || 'Задача' }}
+              {{ curveSet?.title || 'Набор кривых' }}
             </h1>
             <p class="text-sm text-white/70 mt-1">{{ formattedDate }}</p>
           </div>
           <div class="flex flex-wrap gap-3 items-center">
             <span class="px-3 py-1.5 rounded-lg border border-white/20 bg-white/10 text-sm font-semibold">
-              ID: {{ task?.id ?? '—' }}
+              ID: {{ curveSet?.id ?? '—' }}
             </span>
             <span
               class="px-3 py-1.5 rounded-lg border text-sm font-semibold"
@@ -163,7 +183,7 @@ const statusClass = computed(() =>
               {{ statusLabel }}
             </span>
             <RouterLink
-              to="/tasks"
+              to="/curve-sets"
               class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition"
             >
               История задач
@@ -171,10 +191,18 @@ const statusClass = computed(() =>
             </RouterLink>
             <button
               class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition"
-              @click="fetchTask"
+              @click="fetchCurveSet"
             >
               <ArrowPathIcon class="size-4" />
               Обновить
+            </button>
+            <button
+              v-if="curveSet?.status !== 'completed' && curveSet?.status !== 'running'"
+              class="inline-flex items-center gap-2 rounded-xl bg-white text-sky-900 px-4 py-2 text-sm font-semibold hover:bg-sky-50 transition disabled:opacity-60"
+              :disabled="isRunningAnalysis || !curveSet?.curves?.length"
+              @click="runAnalysis"
+            >
+              {{ isRunningAnalysis ? 'Анализ...' : 'Запустить анализ' }}
             </button>
           </div>
         </div>
@@ -185,18 +213,19 @@ const statusClass = computed(() =>
               τ₁ {{ analysisResult?.tau1?.toFixed(2) ?? '—' }}
             </div>
             <div class="text-sm text-white/70">τ₂ {{ analysisResult?.tau2?.toFixed(2) ?? '—' }}</div>
+            <div v-if="analysisError" class="text-xs text-red-300 mt-1">{{ analysisError }}</div>
           </div>
           <div class="rounded-xl border border-white/10 bg-white/10 p-4 shadow-sm shadow-black/10">
             <div class="text-xs text-white/70">Кривых в наборе</div>
             <div class="text-2xl font-bold">
-              {{ task?.curve_set?.curves?.length ?? 0 }}
+              {{ curveSet?.curves?.length ?? 0 }}
             </div>
-            <div class="text-sm text-white/70">Curve Set #{{ task?.curve_set?.id ?? '—' }}</div>
+            <div class="text-sm text-white/70">Curve Set #{{ curveSet?.id ?? '—' }}</div>
           </div>
           <div class="rounded-xl border border-white/10 bg-white/10 p-4 shadow-sm shadow-black/10">
             <div class="text-xs text-white/70">Длительность</div>
             <div class="text-2xl font-bold">
-              {{ task?.processing_time ? `${task.processing_time} мс` : '—' }}
+              {{ curveSet?.processing_time ? `${curveSet.processing_time.toFixed(1)} мс` : '—' }}
             </div>
             <div class="text-sm text-white/70">Время обработки</div>
           </div>
@@ -231,13 +260,13 @@ const statusClass = computed(() =>
             нормализованные данные, если они есть.
           </p>
           <div class="mt-4 text-sm text-slate-600">
-            Кривых: {{ task?.curve_set?.curves?.length ?? 0 }}
+            Кривых: {{ curveSet?.curves?.length ?? 0 }}
           </div>
         </div>
         <div
           class="lg:col-span-2 rounded-2xl border border-slate-100 bg-white/90 shadow-lg shadow-sky-50 p-6 h-96"
         >
-          <VChart v-if="task?.curve_set?.curves?.length" :option="echartOptions" class="h-full" />
+          <VChart v-if="curveSet?.curves?.length" :option="echartOptions" class="h-full" />
           <div v-else class="h-full flex items-center justify-center text-slate-500 text-sm">
             Набор кривых отсутствует
           </div>

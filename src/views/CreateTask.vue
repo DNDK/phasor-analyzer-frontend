@@ -13,13 +13,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Task } from '@/types/task'
 import type { TUploadedData } from '@/components/primitives/types/uploadedData'
 import FileInput from '@/components/primitives/FileInput.vue'
-import { createTask } from '@/api/tasks'
-import { uploadCurveSetFromData } from '@/api/curves'
-import { startAnalysis } from '@/api/analysis'
+import { processUserData } from '@/api/analysis'
 import type { AnalysisResult } from '@/types/analysis_result'
+import type { CurveSet } from '@/types/curveSet'
+import { ApiError } from '@/api/client'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const props = defineProps<{
   mode: 'view' | 'create'
@@ -31,10 +33,9 @@ const taskTitle = ref<string>('')
 const dataInput = ref<TUploadedData>({ curves: [], irf: [] })
 
 const analysisResult = ref<AnalysisResult | null>(null)
-const taskId = ref<number | null>(null)
+const createdCurveSet = ref<CurveSet | null>(null)
 const isSubmitting = ref(false)
 const submitError = ref<string | null>(null)
-const curveUploaded = ref(false)
 const analysisStarted = ref(false)
 
 type StepStatus = 'pending' | 'progress' | 'done' | 'error'
@@ -101,23 +102,9 @@ type WorkflowStep = {
 }
 
 const workflowSteps = computed<WorkflowStep[]>(() => {
-  const createTaskStatus: StepStatus = submitError.value
-    ? 'error'
-    : taskId.value
-      ? 'done'
-      : isSubmitting.value && !taskId.value
-        ? 'progress'
-        : 'pending'
+  const uploadStatus: StepStatus = hasInputData.value ? 'done' : 'pending'
 
-  const uploadStatus: StepStatus = submitError.value
-    ? 'error'
-    : curveUploaded.value
-      ? 'done'
-      : isSubmitting.value && taskId.value && !curveUploaded.value
-        ? 'progress'
-        : 'pending'
-
-  const analysisStatus: StepStatus = submitError.value
+  const processStatus: StepStatus = submitError.value
     ? 'error'
     : analysisResult.value
       ? 'done'
@@ -130,26 +117,13 @@ const workflowSteps = computed<WorkflowStep[]>(() => {
       key: 'upload',
       title: 'Загрузка данных',
       description: 'Выберите или перетащите файл с временной зависимостью интенсивности.',
-      status: hasInputData.value ? 'done' : 'pending',
-    },
-    {
-      key: 'createTask',
-      title: 'Создание задачи',
-      description: 'POST /api/tasks/create — подготавливаем задачу перед загрузкой кривых.',
-      status: createTaskStatus,
-    },
-    {
-      key: 'curves',
-      title: 'Загрузка кривых',
-      description:
-        'POST /api/curves/upload — отправляем набор кривых: time_axis и intensity для каждой колонки.',
       status: uploadStatus,
     },
     {
       key: 'analysis',
-      title: 'Запуск анализа',
-      description: 'POST /api/analysis/start — запускаем расчёт фазовых коэффициентов.',
-      status: analysisStatus,
+      title: 'Обработка и анализ',
+      description: 'POST /analysis/process — загрузка кривых и мгновенный запуск анализа.',
+      status: processStatus,
     },
   ]
 })
@@ -167,9 +141,8 @@ const stepStatusByKey = computed<Record<string, StepStatus>>(() =>
 const runFullAnalysis = async () => {
   submitError.value = null
   analysisResult.value = null
-  curveUploaded.value = false
+  createdCurveSet.value = null
   analysisStarted.value = false
-  taskId.value = null
 
   if (!hasInputData.value) {
     submitError.value = 'Сначала загрузите файл с данными'
@@ -177,42 +150,34 @@ const runFullAnalysis = async () => {
   }
 
   isSubmitting.value = true
-  try {
-    const taskResponse = await createTask(taskTitle.value)
-    if (taskResponse.error.value) {
-      throw new Error('Не удалось создать задачу')
-    }
-    const createdTask = taskResponse.data.value
-    if (!createdTask?.id) {
-      throw new Error('Задача создана, но id не получен')
-    }
-    taskId.value = createdTask.id
+  analysisStarted.value = true
 
-    const uploadPayload = {
-      task_id: createdTask.id,
+  try {
+    const irf = dataInput.value.irf
+    const payload = {
+      title: taskTitle.value || 'Новая задача',
       description: 'User uploaded dataset',
-      irf: dataInput.value.irf,
       curves: dataInput.value.curves.map((curve) => ({
         time_axis: curve.time,
-        intensity: curve.intensity,
+        raw: curve.intensity,
+        irf,
       })),
     }
-    const uploadResponse = await uploadCurveSetFromData(uploadPayload)
-    if (uploadResponse.error.value) {
-      throw new Error('Не удалось загрузить данные на сервер')
-    }
-    curveUploaded.value = true
 
-    analysisStarted.value = true
-    const analysisResponse = await startAnalysis(createdTask.id)
-    if (analysisResponse.error.value) {
-      throw new Error('Не удалось запустить анализ')
-    }
-    analysisResult.value = analysisResponse.data.value || null
+    const result = await processUserData(payload)
+    createdCurveSet.value = result.curve_set
+    analysisResult.value = result.analysis_result
   } catch (e: any) {
-    submitError.value = e?.message || 'Неизвестная ошибка'
+    submitError.value =
+      e instanceof ApiError ? e.message : e?.message || 'Неизвестная ошибка'
   } finally {
     isSubmitting.value = false
+  }
+}
+
+const goToResult = () => {
+  if (createdCurveSet.value) {
+    router.push(`/curve-sets/${createdCurveSet.value.id}`)
   }
 }
 </script>
@@ -276,10 +241,11 @@ const runFullAnalysis = async () => {
             <ArrowRightIcon class="size-4" />
           </button>
           <button
+            v-if="createdCurveSet"
             class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition"
+            @click="goToResult"
           >
-            <img src="/pdficon.svg" class="size-5" />
-            Экспортировать в PDF
+            Перейти к результату
             <ArrowRightIcon class="size-4" />
           </button>
           <div class="text-xs text-white/80 flex items-center" v-if="inputValidationMessage">
@@ -410,7 +376,7 @@ const runFullAnalysis = async () => {
       >
         <div class="font-semibold flex items-center gap-2 text-slate-900">
           <span> Результаты анализа кривых затухания методом фазовых векторов </span>
-          <span v-if="taskId" class="text-xs text-slate-500">(task #{{ taskId }})</span>
+          <span v-if="createdCurveSet" class="text-xs text-slate-500">(curve set #{{ createdCurveSet.id }})</span>
         </div>
         <div v-if="submitError" class="text-red-600 text-sm">{{ submitError }}</div>
         <div v-if="!analysisResult" class="text-sm text-slate-600">

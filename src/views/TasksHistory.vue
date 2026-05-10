@@ -17,61 +17,42 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { getAllTasks } from '@/api/tasks'
-import { getAnalysis } from '@/api/analysis'
-import type { Task } from '@/types/task'
-import type { AnalysisResult } from '@/types/analysis_result'
+import { listCurveSets } from '@/api/curveSets'
+import type { CurveSetSummary } from '@/types/curveSet'
+import { ApiError } from '@/api/client'
 
-const tasks = ref<Task[]>([])
+const curveSets = ref<CurveSetSummary[]>([])
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
-const taskResults = ref<Record<number, AnalysisResult | null>>({})
 
-const fetchTasks = async () => {
+const fetchCurveSets = async () => {
   isLoading.value = true
   errorMessage.value = null
   try {
-    const { data, error } = await getAllTasks()
-    if (error.value) {
-      throw new Error('Не удалось загрузить задачи')
-    }
-    tasks.value = data.value ?? []
-
-    // Бэкенд не отдаёт корректные статусы, поэтому тянем результаты отдельными запросами
-    const resultEntries = await Promise.all(
-      tasks.value.map(async (task) => {
-        if (task.analysis_results) return [task.id, task.analysis_results] as const
-        if (!task.analysis_results_id) return [task.id, null] as const
-
-        const { data: resData, error: resError } = await getAnalysis(task.analysis_results_id)
-        if (resError.value) return [task.id, null] as const
-        return [task.id, resData.value ?? null] as const
-      }),
-    )
-    taskResults.value = Object.fromEntries(resultEntries)
+    curveSets.value = await listCurveSets()
   } catch (err: any) {
-    errorMessage.value = err?.message || 'Ошибка при загрузке задач'
-    tasks.value = []
-    taskResults.value = {}
+    errorMessage.value =
+      err instanceof ApiError ? err.message : 'Ошибка при загрузке списка'
+    curveSets.value = []
   } finally {
     isLoading.value = false
   }
 }
 
-onBeforeMount(fetchTasks)
+onBeforeMount(fetchCurveSets)
 
-const sortedTasks = computed(() =>
-  [...tasks.value].sort(
+const sortedCurveSets = computed(() =>
+  [...curveSets.value].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   ),
 )
 
 const stats = computed(() => {
-  const withResults = sortedTasks.value.filter((task) => Boolean(taskResults.value[task.id])).length
+  const withResults = curveSets.value.filter((cs) => cs.status === 'completed').length
   return {
-    total: tasks.value.length,
+    total: curveSets.value.length,
     withResults,
-    pending: tasks.value.length - withResults,
+    pending: curveSets.value.filter((cs) => cs.status === 'pending' || cs.status === 'failed').length,
   }
 })
 
@@ -91,25 +72,29 @@ const formatDate = (value?: string) => {
     .replace(',', '')
 }
 
-const formatDuration = (value?: number) => {
+const formatDuration = (value?: number | null) => {
   if (value === undefined || value === null) return '—'
   if (value >= 1000) return `${(value / 1000).toFixed(1)} с`
-  return `${value} мс`
+  return `${value.toFixed(1)} мс`
 }
 
-const resultSummary = (task: Task) => {
-  const result = taskResults.value[task.id]
-  if (!result) return 'Ожидает анализа'
-
-  const tau1 = Number.isFinite(result.tau1) ? result.tau1.toFixed(2) : '—'
-  const tau2 = Number.isFinite(result.tau2) ? result.tau2.toFixed(2) : '—'
-  return `τ₁ ${tau1} • τ₂ ${tau2}`
+const statusLabel = (status: string) => {
+  switch (status) {
+    case 'completed': return 'Готово'
+    case 'running': return 'Выполняется'
+    case 'failed': return 'Ошибка'
+    default: return 'Ожидает анализа'
+  }
 }
 
-const curvesCount = (task: Task) => task.curve_set?.curves?.length ?? 0
-
-const resultStatusLabel = (task: Task) =>
-  taskResults.value[task.id] ? 'Готово' : 'Ожидает анализа'
+const statusClass = (status: string) => {
+  switch (status) {
+    case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-100'
+    case 'running': return 'bg-sky-50 text-sky-700 border-sky-100'
+    case 'failed': return 'bg-red-50 text-red-700 border-red-100'
+    default: return 'bg-amber-50 text-amber-700 border-amber-100'
+  }
+}
 </script>
 
 <template>
@@ -132,7 +117,7 @@ const resultStatusLabel = (task: Task) =>
         <div class="flex gap-3 shrink-0">
           <button
             class="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white/80 px-4 py-2 text-sm font-semibold text-sky-900 shadow-sm hover:bg-white"
-            @click="fetchTasks"
+            @click="fetchCurveSets"
           >
             <ArrowPathIcon class="size-5" />
             Обновить
@@ -206,7 +191,7 @@ const resultStatusLabel = (task: Task) =>
         </div>
       </div>
 
-      <div v-else-if="!sortedTasks.length" class="p-8">
+      <div v-else-if="!sortedCurveSets.length" class="p-8">
         <div
           class="rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-10 text-center"
         >
@@ -228,46 +213,37 @@ const resultStatusLabel = (task: Task) =>
         <Table>
           <TableHeader>
             <TableRow class="bg-slate-50/80">
-              <TableHead class="min-w-64">Задача</TableHead>
-              <TableHead>Создана</TableHead>
-              <TableHead>Кривых</TableHead>
+              <TableHead class="min-w-64">Набор кривых</TableHead>
+              <TableHead>Создан</TableHead>
               <TableHead>Длительность</TableHead>
-              <TableHead>Результат</TableHead>
+              <TableHead>Статус</TableHead>
               <TableHead class="w-32 text-right">Детали</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow
-              v-for="task in sortedTasks"
-              :key="task.id"
+              v-for="cs in sortedCurveSets"
+              :key="cs.id"
               class="hover:bg-slate-50/70 transition-colors"
             >
               <TableCell class="font-semibold text-slate-900">
                 <div class="flex items-center gap-3">
-                  <span>{{ task.title }}</span>
-                  <span
-                    class="px-2 py-1 rounded-full text-xs border"
-                    :class="
-                      taskResults[task.id]
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : 'bg-amber-50 text-amber-700 border-amber-100'
-                    "
-                  >
-                    {{ resultStatusLabel(task) }}
-                  </span>
+                  <span>{{ cs.title }}</span>
                 </div>
               </TableCell>
-              <TableCell class="text-gray-700">{{ formatDate(task.created_at) }}</TableCell>
-              <TableCell class="text-gray-700">
-                {{ curvesCount(task) ? `${curvesCount(task)} крив.` : '—' }}
+              <TableCell class="text-gray-700">{{ formatDate(cs.created_at) }}</TableCell>
+              <TableCell class="text-gray-700">{{ formatDuration(cs.processing_time) }}</TableCell>
+              <TableCell>
+                <span
+                  class="px-2 py-1 rounded-full text-xs border"
+                  :class="statusClass(cs.status)"
+                >
+                  {{ statusLabel(cs.status) }}
+                </span>
               </TableCell>
-              <TableCell class="text-gray-700">{{
-                formatDuration(task.processing_time)
-              }}</TableCell>
-              <TableCell class="text-gray-700">{{ resultSummary(task) }}</TableCell>
               <TableCell class="text-right">
                 <RouterLink
-                  :to="`/tasks/${task.id}`"
+                  :to="`/curve-sets/${cs.id}`"
                   class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-900 hover:border-slate-300 hover:bg-slate-50"
                 >
                   Смотреть

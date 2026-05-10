@@ -3,32 +3,25 @@ import { RouterLink } from 'vue-router'
 import { ref, onBeforeMount, computed } from 'vue'
 import { ArrowRightIcon } from '@heroicons/vue/24/outline'
 
-import { getAllTasks } from '@/api/tasks'
-import type { Task } from '@/types/task'
+import { listCurveSets } from '@/api/curveSets'
+import type { CurveSetSummary } from '@/types/curveSet'
 
-const tasks = ref<Task[] | null>(null)
+const curveSets = ref<CurveSetSummary[] | null>(null)
 
 onBeforeMount(async () => {
-  const response = await getAllTasks()
-  tasks.value = response.data.value
+  try {
+    curveSets.value = await listCurveSets()
+  } catch {
+    curveSets.value = []
+  }
 })
 
 const greeting = computed(() => {
   const currentDate = new Date()
-
-  if (currentDate.getHours() < 12) {
-    return 'Доброе утро!'
-  } else if (currentDate.getHours() < 18) {
-    return 'Добрый день'
-  } else {
-    return 'Добрый вечер'
-  }
+  if (currentDate.getHours() < 12) return 'Доброе утро!'
+  if (currentDate.getHours() < 18) return 'Добрый день'
+  return 'Добрый вечер'
 })
-
-const tasksTotal = computed(() => tasks.value?.length ?? 0)
-const tasksWithResults = computed(
-  () => tasks.value?.filter((task) => Boolean(task.analysis_results)).length ?? 0,
-)
 </script>
 
 <template>
@@ -53,7 +46,7 @@ const tasksWithResults = computed(
               <ArrowRightIcon class="size-4" />
             </RouterLink>
             <RouterLink
-              to="/tasks"
+              to="/curve-sets"
               class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-white"
             >
               История задач
@@ -109,7 +102,7 @@ const tasksWithResults = computed(
           <div class="flex items-center justify-between">
             <h2 class="text-2xl font-bold">Недавние задачи</h2>
             <RouterLink
-              to="/tasks"
+              to="/curve-sets"
               class="text-sm font-semibold text-sky-900 border border-sky-200 px-3 py-1.5 rounded-lg hover:bg-sky-50"
             >
               Все задачи
@@ -117,18 +110,18 @@ const tasksWithResults = computed(
           </div>
           <div class="flex flex-col gap-4">
             <RouterLink
-              v-for="task in tasks?.slice(0, 5) || []"
-              :key="task.id"
+              v-for="cs in curveSets?.slice(0, 5) || []"
+              :key="cs.id"
               class="group"
-              :to="`/tasks/${task.id}`"
+              :to="`/curve-sets/${cs.id}`"
             >
               <div
                 class="w-full relative h-18 rounded-xl border border-slate-100 bg-white/70 font-semibold p-4 flex gap-5 group-hover:border-sky-200 group-hover:bg-sky-50 items-center"
               >
                 <div class="w-full flex flex-col">
-                  <span class="text-slate-900">{{ task.title }}</span>
+                  <span class="text-slate-900">{{ cs.title }}</span>
                   <span class="text-xs text-slate-500">{{
-                    new Date(task.created_at).toLocaleString()
+                    new Date(cs.created_at).toLocaleString()
                   }}</span>
                 </div>
                 <div class="text-gray-400 relative h-full flex items-center">
@@ -138,7 +131,7 @@ const tasksWithResults = computed(
                 </div>
               </div>
             </RouterLink>
-            <div v-if="!tasks?.length" class="text-sm text-gray-700">
+            <div v-if="!curveSets?.length" class="text-sm text-gray-700">
               Список пуст — создайте первую задачу, чтобы увидеть её здесь.
             </div>
           </div>

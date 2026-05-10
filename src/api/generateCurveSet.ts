@@ -1,3 +1,2 @@
-export async function generateCurveSet(task_id: number | string) {
-  console.log('ya peedor', task_id)
-}
+// Deprecated: use POST /curve-sets/generate via src/api/curveSets.ts instead.
+export {}
